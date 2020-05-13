@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: simulationautomation-k8s
+  labels:
+    name: simulationautomation-k8s # needs to match with deployment.yaml
+spec:
+  ports:
+    - nodePort: 30163 
+      port: 8080      
+      targetPort: 8080  #default springbott port
+      protocol: TCP
+  selector: #Defines how the deployment finds which pods to manage   
+    app: simulationautomation-k8s
+  type: NodePort       
+

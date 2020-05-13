@@ -1,0 +1,20 @@
+apiVersion: apps/v1 
+kind: Deployment    
+metadata:              
+  name: simulationautomation-k8s
+spec:                
+  selector: # Selector field defines how the deployment finds which pods to manage
+    matchLabels:
+      app: simulationautomation-k8s
+  replicas: 3        
+  template:
+    metadata:
+      labels: # used for identifying attributes for the objects such as pods and replication controller
+        app: simulationautomation-k8s
+    spec:
+      containers:
+        - name: simulationautomation-k8s
+          image: simulationautomation-k8s:1.0
+          ports:
+            - containerPort: 8080
+
