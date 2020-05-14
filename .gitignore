@@ -33,3 +33,4 @@ build/
 ### own settings ###
 mvnw
 mvnw.cmd
+logs/

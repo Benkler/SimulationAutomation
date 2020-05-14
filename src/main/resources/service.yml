@@ -6,9 +6,9 @@ metadata:
     name: simulationautomation-k8s # needs to match with deployment.yaml
 spec:
   ports:
-    - nodePort: 30163 
+    - nodePort: 30164 
       port: 8080      
-      targetPort: 8080  #default springbott port
+      targetPort: 8080  #default springboot port
       protocol: TCP
   selector: #Defines how the deployment finds which pods to manage   
     app: simulationautomation-k8s

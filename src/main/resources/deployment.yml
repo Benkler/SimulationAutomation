@@ -6,7 +6,7 @@ spec:
   selector: # Selector field defines how the deployment finds which pods to manage
     matchLabels:
       app: simulationautomation-k8s
-  replicas: 3        
+  replicas: 1        
   template:
     metadata:
       labels: # used for identifying attributes for the objects such as pods and replication controller
@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
         - name: simulationautomation-k8s
-          image: simulationautomation-k8s:1.0
+          image: simulationautomation-k8s:5.0
+          imagePullPolicy: "IfNotPresent"
           ports:
             - containerPort: 8080
 
