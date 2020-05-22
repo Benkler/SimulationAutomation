@@ -1,0 +1,17 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: simulators.palladio.org
+spec:
+  group: palladio.org
+  versions:
+    - name: v1
+      served: true
+      storage: true
+  scope: Namespaced
+  names:
+    plural: simulators
+    singular: simulator
+    kind: Simulation
+    shortNames:
+    - sim
