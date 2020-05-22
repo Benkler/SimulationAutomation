@@ -8,6 +8,7 @@ public class KubernetesSimulationAutomationApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(KubernetesSimulationAutomationApplication.class, args);
+
 	}
 
 }

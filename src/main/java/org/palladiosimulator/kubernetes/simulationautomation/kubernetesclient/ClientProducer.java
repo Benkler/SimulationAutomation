@@ -3,8 +3,8 @@ package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.logging.Level;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -13,8 +13,6 @@ import org.springframework.context.annotation.Scope;
 
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-
-import org.slf4j.Logger;
 
 @Configuration
 public class ClientProducer {
@@ -28,11 +26,10 @@ public class ClientProducer {
 		try {
 			String nameSpace = new String(
 					Files.readAllBytes(Paths.get("var/run/secrets/kubernetes.io/serviceaccount/namespace")));
-			System.out.println("Current namespace=" + nameSpace);
+			log.info("Current namespace=" + nameSpace);
 			return nameSpace;
 		} catch (IOException e) {
-			System.out
-					.println("Error while retrieving namespace. Message: " + e + "\n Fallback to namespace 'default'");
+			log.warn("Error while retrieving namespace. Message: " + e + "\n Fallback to namespace 'default'");
 			return "default";
 		}
 
@@ -42,7 +39,7 @@ public class ClientProducer {
 	@Scope("singleton")
 	public KubernetesClient makeDefaultClient(@Qualifier("namespace") String namespace) {
 
-		System.out.println("Kubernetes Client created in namespace=" + namespace);
+		log.info("Kubernetes Client created in namespace=" + namespace);
 
 		return new DefaultKubernetesClient().inNamespace(namespace);
 

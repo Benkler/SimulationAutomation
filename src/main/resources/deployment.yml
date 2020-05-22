@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: simulationautomation-k8s
-          image: simulationautomation-k8s:5.0
+          image: simulationautomation-k8s:1.0
           imagePullPolicy: "IfNotPresent"
           ports:
             - containerPort: 8080
