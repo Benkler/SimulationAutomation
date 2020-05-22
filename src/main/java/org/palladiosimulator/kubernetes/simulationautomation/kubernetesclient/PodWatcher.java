@@ -13,8 +13,8 @@ public class PodWatcher implements Watcher<Pod> {
 
 	@Override
 	public void eventReceived(Action action, Pod pod) {
-		log.info("Received " + action + " event from Pod with name=" + pod.getMetadata().getName() + " version="
-				+ pod.getMetadata().getResourceVersion());
+		log.info("Received " + action + " event from Pod with name=" + pod.getMetadata().getName()
+				+ " ressource version=" + pod.getMetadata().getResourceVersion());
 
 	}
 

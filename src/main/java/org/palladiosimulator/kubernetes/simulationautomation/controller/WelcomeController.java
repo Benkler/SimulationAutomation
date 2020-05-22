@@ -2,6 +2,8 @@ package org.palladiosimulator.kubernetes.simulationautomation.controller;
 
 import java.util.List;
 
+import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.CustomResourceBuilder;
+import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.CustomResourceDefinitionBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,12 @@ public class WelcomeController {
 
 	@Autowired
 	KubernetesClient client;
+
+	@Autowired
+	CustomResourceDefinitionBuilder crdBuilder;
+
+	@Autowired
+	CustomResourceBuilder crBuilder;
 
 	@RequestMapping("/greeting")
 	public String greeting() {
@@ -49,6 +57,38 @@ public class WelcomeController {
 		}
 
 		return div.write();
+	}
+
+	@RequestMapping("/create")
+	public String createRessource() {
+
+		crBuilder.createCustomResource("test2", "default");
+
+		return "Try to create ressource";
+	}
+
+	@RequestMapping("/list")
+	public String list() {
+
+		return client.customResource(crdBuilder.getCRDContext()).list("default").toString();
+
+//		// Listing Custom resources in a specific namespace
+//		JSONObject animalListJSON = new JSONObject(client.customResource(crdBuilder.getCRDContext()).list("default"));
+//
+//		JSONArray animalItems;
+//		try {
+//			animalItems = animalListJSON.getJSONArray("items");
+//			for (int index = 0; index < animalItems.length(); index++) {
+//				JSONObject currentItem = animalItems.getJSONObject(index);
+//
+//				log.info(currentItem.getJSONObject("metadata").getString("name"));
+//			}
+//		} catch (JSONException e) {
+//			// TODO Auto-generated catch block
+//			return e.getMessage();
+//		}
+//
+//		return "list";
 	}
 
 }
