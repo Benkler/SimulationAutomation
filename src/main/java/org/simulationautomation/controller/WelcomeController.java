@@ -66,8 +66,6 @@ public class WelcomeController {
 	@RequestMapping("/create")
 	public String createRessource() {
 
-		nsBuilder.createNamespace("otherspace");
-
 		crBuilder.createCustomResource("test2", "otherspace");
 
 		return "Try to create ressource";

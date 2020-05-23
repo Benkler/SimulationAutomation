@@ -1,5 +1,7 @@
 package org.simulationautomation.kubernetesclient.impl;
 
+import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_NAMESPACE;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -7,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.simulationautomation.kubernetesclient.api.ICustomResourceBuilder;
 import org.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
+import org.simulationautomation.kubernetesclient.simulation.SimulationCRDs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,6 +80,16 @@ public class SimulationCustomResourceBuilder implements ICustomResourceBuilder {
 
 		return resource;
 
+	}
+
+	/**
+	 * Create custom resource for Namespace in {@link SimulationCRDs}
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public Map<String, Object> createCustomResource(String name) {
+		return createCustomResource(name, SIMULATION_NAMESPACE);
 	}
 
 }

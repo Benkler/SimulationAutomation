@@ -3,6 +3,7 @@ package org.simulationautomation.kubernetesclient.operator;
 import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_CRD_GROUP;
 import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_CRD_KIND;
 import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_CRD_NAME;
+import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_NAMESPACE;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import org.simulationautomation.kubernetesclient.crds.SimulationCR;
 import org.simulationautomation.kubernetesclient.crds.SimulationCRDoneable;
 import org.simulationautomation.kubernetesclient.crds.SimulationCRList;
 import org.simulationautomation.kubernetesclient.simulation.SimulationService;
+import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,9 @@ public class SimulationOperator {
 	private K8SCoreRuntime k8SCoreRuntime;
 
 	@Autowired
+	CustomNamespaceBuilder nsBuilder;
+
+	@Autowired
 	@Qualifier("simulationCRDBuilder")
 	ICustomResourceDefinitionBuilder crdBuilder;
 
@@ -54,9 +59,8 @@ public class SimulationOperator {
 	 * for our CRDs
 	 */
 	public void init() {
-
+		nsBuilder.createNamespace(SIMULATION_NAMESPACE);
 		registerSimulationCRD();
-
 		// Creating CRDs Clients
 		simulationCRDClient = k8SCoreRuntime.customResourcesClient(simulationCRD, SimulationCR.class,
 				SimulationCRList.class, SimulationCRDoneable.class);

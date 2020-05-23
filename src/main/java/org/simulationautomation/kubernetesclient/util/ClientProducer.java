@@ -41,6 +41,7 @@ public class ClientProducer {
 
 		log.info("Kubernetes Client created in namespace=" + namespace);
 
+		// TODO why not using given namespace
 		// return new DefaultKubernetesClient().inNamespace(namespace);
 		return new DefaultKubernetesClient();
 
