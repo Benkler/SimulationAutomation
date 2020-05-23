@@ -1,7 +1,7 @@
-package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.manager;
+package org.simulationautomation.kubernetesclient.manager;
 
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.IInformerFactory;
+import org.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
+import org.simulationautomation.kubernetesclient.operator.SimulationOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -16,20 +16,21 @@ public class ApplicationStartupManager implements ApplicationListener<Applicatio
 	ICustomResourceDefinitionBuilder crdb;
 
 	@Autowired
-	@Qualifier("simulationInformerFactory")
-	IInformerFactory informerFactory;
+	SimulationOperator simulationOperator;
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 		/*
 		 * Create custom resource definition for simulation
 		 */
-		crdb.createCRD();
+		// crdb.createCRD();
 
 		/*
 		 * Create informer for simulation types
 		 */
-		informerFactory.initInformers();
+		// informerFactory.initInformers();
+
+		simulationOperator.init();
 
 	}
 

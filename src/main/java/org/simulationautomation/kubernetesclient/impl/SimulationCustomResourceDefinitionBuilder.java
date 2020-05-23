@@ -1,7 +1,7 @@
-package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.impl;
+package org.simulationautomation.kubernetesclient.impl;
 
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.crd.SimulationCR;
+import org.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
+import org.simulationautomation.kubernetesclient.crds.SimulationCR;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,23 +38,20 @@ public class SimulationCustomResourceDefinitionBuilder implements ICustomResourc
 	/**
 	 * Create Custom Resource Definition for Kind=Simulation and register
 	 */
-	@Override
-	public void createCRD() {
+
+	private void createCRD() {
 		// Load CRD as object from YAML
 		CustomResourceDefinition crd = client.customResourceDefinitions()
 				.load(SimulationCustomResourceDefinitionBuilder.class.getResourceAsStream(PATH_TO_SIMULATION_CRD))
 				.get();
 
-		// Apply CRD object onto your Kubernetes cluster
-		client.customResourceDefinitions().createOrReplace(crd);
-
-		registerSimulationCR();
-
-		this.simulationCrd = crd;
-
 		log.info("Custom resource definition successfully created");
+		this.simulationCrd = crd;
 	}
 
+	/**
+	 * Get custom resource definition for kind=simulation
+	 */
 	@Override
 	public CustomResourceDefinition getCRD() {
 		if (simulationCrd == null) {

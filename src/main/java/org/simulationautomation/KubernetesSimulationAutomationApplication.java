@@ -1,4 +1,4 @@
-package org.palladiosimulator.kubernetes.simulationautomation;
+package org.simulationautomation;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

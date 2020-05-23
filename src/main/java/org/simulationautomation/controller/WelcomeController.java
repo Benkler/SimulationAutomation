@@ -1,11 +1,10 @@
-package org.palladiosimulator.kubernetes.simulationautomation.controller;
+package org.simulationautomation.controller;
 
 import java.util.List;
 
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceBuilder;
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.old.SimulationCustomClientFactory;
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
+import org.simulationautomation.kubernetesclient.api.ICustomResourceBuilder;
+import org.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
+import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,36 +68,15 @@ public class WelcomeController {
 
 		nsBuilder.createNamespace("otherspace");
 
-		crBuilder.createCustomResource("test8", "otherspace");
+		crBuilder.createCustomResource("test2", "otherspace");
 
 		return "Try to create ressource";
 	}
 
-	@Autowired
-	SimulationCustomClientFactory factory;
-
 	@RequestMapping("/list")
 	public String list() {
 
-		return factory.bla().toString();
-
-//		// Listing Custom resources in a specific namespace
-//		JSONObject animalListJSON = new JSONObject(client.customResource(crdBuilder.getCRDContext()).list("default"));
-//
-//		JSONArray animalItems;
-//		try {
-//			animalItems = animalListJSON.getJSONArray("items");
-//			for (int index = 0; index < animalItems.length(); index++) {
-//				JSONObject currentItem = animalItems.getJSONObject(index);
-//
-//				log.info(currentItem.getJSONObject("metadata").getString("name"));
-//			}
-//		} catch (JSONException e) {
-//			// TODO Auto-generated catch block
-//			return e.getMessage();
-//		}
-//
-//		return "list";
+		return "";
 	}
 
 }

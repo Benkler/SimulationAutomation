@@ -1,12 +1,12 @@
-package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.impl;
+package org.simulationautomation.kubernetesclient.impl;
 
 import java.io.IOException;
 import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceBuilder;
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
+import org.simulationautomation.kubernetesclient.api.ICustomResourceBuilder;
+import org.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
