@@ -39,7 +39,7 @@ public class SimulationCustomResourceBuilder implements ICustomResourceBuilder {
 	private static final String PATH_TO_TEMPLATE = "/simulation_cr_template.yml";
 
 	/**
-	 * Create custom ressource accroding to crDefinition in
+	 * Create custom resource according to crDefinition in
 	 * "simulation_cr_template.yml" with specified name in namespace
 	 * 
 	 * @param name
@@ -68,7 +68,7 @@ public class SimulationCustomResourceBuilder implements ICustomResourceBuilder {
 			customResource.getJSONObject("metadata").put("name", name);
 			customResource.getJSONObject("metadata").put("namespace", namespace);
 
-			// Create Ressource
+			// Create Resource in namespace
 			resource = client.customResource(crdContext).create(namespace, customResource.toString());
 			log.info("Resource successfully created");
 		} catch (IOException | JSONException e) {

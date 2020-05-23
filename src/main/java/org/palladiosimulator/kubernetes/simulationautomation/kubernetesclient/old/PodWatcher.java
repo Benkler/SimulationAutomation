@@ -1,4 +1,4 @@
-package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.impl;
+package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.old;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

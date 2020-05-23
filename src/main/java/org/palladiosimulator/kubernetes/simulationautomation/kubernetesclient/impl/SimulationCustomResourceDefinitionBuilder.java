@@ -1,16 +1,16 @@
 package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.impl;
 
 import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
+import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.crd.SimulationCR;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 
 /**
  * Build Simulation CRD on startup and provided CRD context.
@@ -19,40 +19,64 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
  *
  */
 @Component(value = "simulationCRDBuilder")
-public class SimulationCustomResourceDefinitionBuilder
-		implements ApplicationListener<ApplicationReadyEvent>, ICustomResourceDefinitionBuilder {
+public class SimulationCustomResourceDefinitionBuilder implements ICustomResourceDefinitionBuilder {
 
 	private static final Logger log = LoggerFactory.getLogger(SimulationCustomResourceDefinitionBuilder.class);
 
+	private static final String PATH_TO_SIMULATION_CRD = "/simulation-crd.yml";
+	private static final String SIMULATION_GROUP = "palladio.org";
+	private static final String VERSION = "v1";
+	private static final String SIMULATION_NAME = "Simulation";
+
 	private CustomResourceDefinitionContext simulationCrdContext;
+
+	private CustomResourceDefinition simulationCrd;
 
 	@Autowired
 	KubernetesClient client;
 
-	@Override
-	public void onApplicationEvent(ApplicationReadyEvent event) {
-		createCRD();
-
-	}
-
+	/**
+	 * Create Custom Resource Definition for Kind=Simulation and register
+	 */
 	@Override
 	public void createCRD() {
 		// Load CRD as object from YAML
 		CustomResourceDefinition crd = client.customResourceDefinitions()
-				.load(SimulationCustomResourceDefinitionBuilder.class.getResourceAsStream("/simulation-crd.yml")).get();
-		// Apply CRD object onto your Kubernetes cluster
+				.load(SimulationCustomResourceDefinitionBuilder.class.getResourceAsStream(PATH_TO_SIMULATION_CRD))
+				.get();
 
+		// Apply CRD object onto your Kubernetes cluster
 		client.customResourceDefinitions().createOrReplace(crd);
+
+		registerSimulationCR();
+
+		this.simulationCrd = crd;
+
 		log.info("Custom resource definition successfully created");
+	}
+
+	@Override
+	public CustomResourceDefinition getCRD() {
+		if (simulationCrd == null) {
+			createCRD();
+		}
+		return simulationCrd;
 	}
 
 	@Override
 	public CustomResourceDefinitionContext getCRDContext() {
 		if (simulationCrdContext == null) {
-			simulationCrdContext = new CustomResourceDefinitionContext.Builder().withGroup("palladio.org")
-					.withScope("Namespaced").withVersion("v1").withPlural("simulators").build();
+			simulationCrdContext = new CustomResourceDefinitionContext.Builder().withGroup(SIMULATION_GROUP)
+					.withScope("Namespaced").withVersion(VERSION).withPlural("simulators").build();
 		}
 		return simulationCrdContext;
+
+	}
+
+	private void registerSimulationCR() {
+		log.info("Register SimulationCR");
+		KubernetesDeserializer.registerCustomKind(SIMULATION_GROUP + "/" + VERSION, SIMULATION_NAME,
+				SimulationCR.class);
 
 	}
 

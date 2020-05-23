@@ -2,9 +2,10 @@ package org.palladiosimulator.kubernetes.simulationautomation.controller;
 
 import java.util.List;
 
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
 import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceBuilder;
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.impl.CustomNamespaceBuilder;
+import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
+import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.old.SimulationCustomClientFactory;
+import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,15 +69,18 @@ public class WelcomeController {
 
 		nsBuilder.createNamespace("otherspace");
 
-		crBuilder.createCustomResource("test4", "otherspace");
+		crBuilder.createCustomResource("test8", "otherspace");
 
 		return "Try to create ressource";
 	}
 
+	@Autowired
+	SimulationCustomClientFactory factory;
+
 	@RequestMapping("/list")
 	public String list() {
 
-		return client.customResource(crdBuilder.getCRDContext()).list("default").toString();
+		return factory.bla().toString();
 
 //		// Listing Custom resources in a specific namespace
 //		JSONObject animalListJSON = new JSONObject(client.customResource(crdBuilder.getCRDContext()).list("default"));

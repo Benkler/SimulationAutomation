@@ -1,4 +1,4 @@
-package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.impl;
+package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.old;
 
 import java.util.List;
 
@@ -15,27 +15,20 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
 @Component
-public class SimulationCustomResourceLister {
-
-	@Autowired
-	@Qualifier("simulationCRDBuilder")
-	ICustomResourceDefinitionBuilder crdBuilder;
+public class SimulationCustomClientFactory {
 
 	@Autowired
 	KubernetesClient client;
 
-	/**
-	 * List custom Resources for type Simulation in given namepsace
-	 * 
-	 * @param namespace
-	 * @return
-	 */
-	public List<SimulationCR> listCustomResources(String namespace) {
+	@Autowired
+	@Qualifier("simulationCRDBuilder")
+	ICustomResourceDefinitionBuilder crdb;
+
+	public List<SimulationCR> bla() {
 
 		NonNamespaceOperation<SimulationCR, SimulationCRList, SimulationCRDoneable, Resource<SimulationCR, SimulationCRDoneable>> custClient = client
-				.customResources(crdBuilder.getCRD(), SimulationCR.class, SimulationCRList.class,
-						SimulationCRDoneable.class)
-				.inNamespace(namespace);
+				.customResources(crdb.getCRD(), SimulationCR.class, SimulationCRList.class, SimulationCRDoneable.class)
+				.inNamespace("otherspace");
 
 		return custClient.list().getItems();
 

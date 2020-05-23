@@ -1,4 +1,4 @@
-package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.impl;
+package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.util;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,7 +41,8 @@ public class ClientProducer {
 
 		log.info("Kubernetes Client created in namespace=" + namespace);
 
-		return new DefaultKubernetesClient().inNamespace(namespace);
+		// return new DefaultKubernetesClient().inNamespace(namespace);
+		return new DefaultKubernetesClient();
 
 	}
 

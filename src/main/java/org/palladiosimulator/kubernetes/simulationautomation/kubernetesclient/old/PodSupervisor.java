@@ -1,4 +1,4 @@
-package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.impl;
+package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.old;
 
 import java.util.List;
 
