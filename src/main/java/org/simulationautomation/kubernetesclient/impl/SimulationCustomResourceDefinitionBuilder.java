@@ -1,7 +1,6 @@
 package org.simulationautomation.kubernetesclient.impl;
 
 import org.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
-import org.simulationautomation.kubernetesclient.crds.SimulationCR;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Component;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 
 /**
  * Build Simulation CRD on startup and provided CRD context.
@@ -67,13 +65,6 @@ public class SimulationCustomResourceDefinitionBuilder implements ICustomResourc
 					.withScope("Namespaced").withVersion(VERSION).withPlural("simulators").build();
 		}
 		return simulationCrdContext;
-
-	}
-
-	private void registerSimulationCR() {
-		log.info("Register SimulationCR");
-		KubernetesDeserializer.registerCustomKind(SIMULATION_GROUP + "/" + VERSION, SIMULATION_NAME,
-				SimulationCR.class);
 
 	}
 

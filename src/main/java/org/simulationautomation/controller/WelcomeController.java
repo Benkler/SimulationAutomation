@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.simulationautomation.kubernetesclient.api.ICustomResourceBuilder;
 import org.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
+import org.simulationautomation.kubernetesclient.operator.SimulationOperator;
 import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,9 @@ public class WelcomeController {
 	@Autowired
 	CustomNamespaceBuilder nsBuilder;
 
+	@Autowired
+	SimulationOperator operator;
+
 	@RequestMapping("/greeting")
 	public String greeting() {
 		log.info("RestEndpoint triggered");
@@ -66,7 +70,7 @@ public class WelcomeController {
 	@RequestMapping("/create")
 	public String createRessource() {
 
-		crBuilder.createCustomResource("test2", "otherspace");
+		operator.createSimulation("simu1");
 
 		return "Try to create ressource";
 	}

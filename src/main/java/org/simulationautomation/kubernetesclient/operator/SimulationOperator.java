@@ -5,8 +5,10 @@ import static org.simulationautomation.kubernetesclient.simulation.SimulationCRD
 import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_CRD_NAME;
 import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_NAMESPACE;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.simulationautomation.kubernetesclient.api.ICustomResourceBuilder;
 import org.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
 import org.simulationautomation.kubernetesclient.crds.SimulationCR;
 import org.simulationautomation.kubernetesclient.crds.SimulationCRDoneable;
@@ -16,17 +18,28 @@ import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import io.fabric8.kubernetes.api.builder.Predicate;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
 @Component
 public class SimulationOperator {
+
+	static final String IMAGE_PULL_POLICY = "IfNotPresent";
+	static final String POD_RESTART_POLICY = "Never";
+	static final String POD_PHASE_SUCCEEDED = "Succeeded";
+	static final String POD_PHASE_FAILED = "Failed";
+	private static final JobFinishedPredicate POD_PREDICATE = new JobFinishedPredicate();
 
 	private Logger log = LoggerFactory.getLogger(SimulationOperator.class);
 
@@ -37,10 +50,16 @@ public class SimulationOperator {
 	private NonNamespaceOperation<SimulationCR, SimulationCRList, SimulationCRDoneable, Resource<SimulationCR, SimulationCRDoneable>> simulationCRDClient;
 
 	@Autowired
+	private KubernetesClient client;
+
+	@Autowired
 	private SimulationService simulationsService;
 
 	@Autowired
 	private SimulationWatcher simulationWatcher;
+
+	@Autowired
+	private SimulationPodWatcher simulationPodWatcher;
 
 	@Autowired
 	private K8SCoreRuntime k8SCoreRuntime;
@@ -49,8 +68,10 @@ public class SimulationOperator {
 	CustomNamespaceBuilder nsBuilder;
 
 	@Autowired
-	@Qualifier("simulationCRDBuilder")
 	ICustomResourceDefinitionBuilder crdBuilder;
+
+	@Autowired
+	ICustomResourceBuilder customResourceBuilder;
 
 	/*
 	 * Init can only be called if all the required CRDs are present - It creates the
@@ -114,8 +135,11 @@ public class SimulationOperator {
 	 * apps to/from the In memory desired state
 	 */
 	private void registerSimulationWatch() {
-		log.info("> Registering Application CRD Watch");
+		log.info("Registering CRD Watch");
 		simulationCRDClient.withResourceVersion(simulationResourceVersion).watch(simulationWatcher);
+		// client.pods().withResourceVersion(simulationResourceVersion).watch(simulationPodWatcher);
+		log.info("Registering Pod Watch");
+		client.pods().watch(simulationPodWatcher);
 
 	}
 
@@ -127,6 +151,54 @@ public class SimulationOperator {
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * Create a simulation custom resource with given name in simulation namespace.
+	 * </br>
+	 * 
+	 * @param name
+	 */
+	public void createSimulation(String name) {
+		customResourceBuilder.createCustomResource(name, SIMULATION_NAMESPACE);
+		// Busy waiting
+		while (simulationsService.getSimulation(name) == null)
+			;
+
+		SimulationCR simulation = simulationsService.getSimulation(name);
+		addPod(simulation);
+
+	}
+
+	/**
+	 * 
+	 * @param simulation
+	 */
+	public void addPod(SimulationCR simulation) {
+		log.info("Trying to add pod with name=" + simulation.getMetadata().getName() + " in namespace="
+				+ SIMULATION_NAMESPACE);
+		Pod pod = createNewPod(simulation);
+		client.pods().inNamespace(SIMULATION_NAMESPACE).create(pod);
+
+	}
+
+	private Pod createNewPod(SimulationCR simulation) {
+
+		Container container = createSimulationContainer(simulation);
+
+		return new PodBuilder().withNewMetadata().withGenerateName(simulation.getMetadata().getName() + "-pod")
+				.withNamespace(simulation.getMetadata().getNamespace())
+				.withLabels(Collections.singletonMap("app", simulation.getMetadata().getName())).addNewOwnerReference()
+				.withController(true).withKind(SIMULATION_CRD_KIND).withApiVersion("demo.k8s.io/v1alpha1")
+				.withName(simulation.getMetadata().getName()).withNewUid(simulation.getMetadata().getUid())
+				.endOwnerReference().endMetadata().withNewSpec().withContainers(container)
+				.withRestartPolicy(POD_RESTART_POLICY).endSpec().build();
+	}
+
+	private Container createSimulationContainer(SimulationCR simulation) {
+
+		return new ContainerBuilder().withName("palladiosumlation").withImage("palladiosimulator/eclipse")
+				.withImagePullPolicy(IMAGE_PULL_POLICY).build();
 	}
 
 	/*
@@ -161,5 +233,54 @@ public class SimulationOperator {
 		}
 		return false;
 	}
+
+	/** Checks whether pod is Failed or Successfully finished command execution */
+	static class JobFinishedPredicate implements Predicate<Pod> {
+		@Override
+		public Boolean apply(Pod pod) {
+			if (pod.getStatus() == null) {
+				return false;
+			}
+			switch (pod.getStatus().getPhase()) {
+			case POD_PHASE_FAILED:
+				// fall through
+			case POD_PHASE_SUCCEEDED:
+				// job is finished.
+				return true;
+			default:
+				// job is not finished.
+				return false;
+			}
+		}
+	}
+
+//	  void execute(String workspaceId, String[] commandBase, String... arguments) {
+//		    final String jobName = commandBase[0];
+//		    final String podName = jobName + '-' + workspaceId;
+//		    final String[] command = buildCommand(commandBase, arguments);
+//		    final Pod pod = newPod(podName, command);
+//		    OpenShiftPods pods = null;
+//		    try {
+//		      pods = factory.create(workspaceId).pods();
+//		      pods.create(pod);
+//		      final Pod finished = pods.wait(podName, WAIT_POD_TIMEOUT_MIN, POD_PREDICATE::apply);
+//		      if (POD_PHASE_FAILED.equals(finished.getStatus().getPhase())) {
+//		        LOG.error("Job command '%s' execution is failed.", Arrays.toString(command));
+//		      }
+//		    } catch (InfrastructureException ex) {
+//		      LOG.error(
+//		          "Unable to perform '{}' command for the workspace '{}' cause: '{}'",
+//		          Arrays.toString(command),
+//		          workspaceId,
+//		          ex.getMessage());
+//		    } finally {
+//		      if (pods != null) {
+//		        try {
+//		          pods.delete(podName);
+//		        } catch (InfrastructureException ignored) {
+//		        }
+//		      }
+//		    }
+//		  }
 
 }

@@ -21,7 +21,7 @@ public class SimulationWatcher implements Watcher<SimulationCR> {
 	@Override
 	public void eventReceived(Watcher.Action action, SimulationCR simulation) {
 		if (action.equals(Action.ADDED)) {
-			log.info(">> Adding Simulation: " + simulation.getMetadata().getName());
+			log.info("Adding SimulationCR with name=: " + simulation.getMetadata().getName());
 			simulationsService.addSimulation(simulation.getMetadata().getName(), simulation);
 
 		}
