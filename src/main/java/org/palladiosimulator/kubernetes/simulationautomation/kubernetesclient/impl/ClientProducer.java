@@ -1,4 +1,4 @@
-package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient;
+package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.impl;
 
 import java.io.IOException;
 import java.nio.file.Files;

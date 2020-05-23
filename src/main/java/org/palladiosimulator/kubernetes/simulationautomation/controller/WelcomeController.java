@@ -2,8 +2,9 @@ package org.palladiosimulator.kubernetes.simulationautomation.controller;
 
 import java.util.List;
 
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.CustomResourceBuilder;
-import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.CustomResourceDefinitionBuilder;
+import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
+import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceBuilder;
+import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.impl.CustomNamespaceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,10 +28,13 @@ public class WelcomeController {
 	KubernetesClient client;
 
 	@Autowired
-	CustomResourceDefinitionBuilder crdBuilder;
+	ICustomResourceDefinitionBuilder crdBuilder;
 
 	@Autowired
-	CustomResourceBuilder crBuilder;
+	ICustomResourceBuilder crBuilder;
+
+	@Autowired
+	CustomNamespaceBuilder nsBuilder;
 
 	@RequestMapping("/greeting")
 	public String greeting() {
@@ -62,7 +66,9 @@ public class WelcomeController {
 	@RequestMapping("/create")
 	public String createRessource() {
 
-		crBuilder.createCustomResource("test2", "default");
+		nsBuilder.createNamespace("otherspace");
+
+		crBuilder.createCustomResource("test4", "otherspace");
 
 		return "Try to create ressource";
 	}

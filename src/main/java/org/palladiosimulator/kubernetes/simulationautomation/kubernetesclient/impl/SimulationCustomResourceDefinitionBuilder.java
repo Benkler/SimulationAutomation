@@ -1,5 +1,6 @@
-package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient;
+package org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.impl;
 
+import org.palladiosimulator.kubernetes.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,10 +12,17 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
-@Component
-public class CustomResourceDefinitionBuilder implements ApplicationListener<ApplicationReadyEvent> {
+/**
+ * Build Simulation CRD on startup and provided CRD context.
+ * 
+ * @author Niko Benkler
+ *
+ */
+@Component(value = "simulationCRDBuilder")
+public class SimulationCustomResourceDefinitionBuilder
+		implements ApplicationListener<ApplicationReadyEvent>, ICustomResourceDefinitionBuilder {
 
-	private static final Logger log = LoggerFactory.getLogger(CustomResourceDefinitionBuilder.class);
+	private static final Logger log = LoggerFactory.getLogger(SimulationCustomResourceDefinitionBuilder.class);
 
 	private CustomResourceDefinitionContext simulationCrdContext;
 
@@ -23,15 +31,22 @@ public class CustomResourceDefinitionBuilder implements ApplicationListener<Appl
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
+		createCRD();
 
-		// Load CRD as object from YAML
-		CustomResourceDefinition animalCrd = client.customResourceDefinitions()
-				.load(CustomResourceDefinitionBuilder.class.getResourceAsStream("/simulation-crd.yml")).get();
-		// Apply CRD object onto your Kubernetes cluster
-
-		client.customResourceDefinitions().createOrReplace(animalCrd);
 	}
 
+	@Override
+	public void createCRD() {
+		// Load CRD as object from YAML
+		CustomResourceDefinition crd = client.customResourceDefinitions()
+				.load(SimulationCustomResourceDefinitionBuilder.class.getResourceAsStream("/simulation-crd.yml")).get();
+		// Apply CRD object onto your Kubernetes cluster
+
+		client.customResourceDefinitions().createOrReplace(crd);
+		log.info("Custom resource definition successfully created");
+	}
+
+	@Override
 	public CustomResourceDefinitionContext getCRDContext() {
 		if (simulationCrdContext == null) {
 			simulationCrdContext = new CustomResourceDefinitionContext.Builder().withGroup("palladio.org")
