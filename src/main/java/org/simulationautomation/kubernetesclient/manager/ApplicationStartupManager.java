@@ -64,17 +64,16 @@ public class ApplicationStartupManager
 
 		NFSVolumeSource nfsVolumeSource = new NFSVolumeSource();
 		nfsVolumeSource.setPath("/");
-		nfsVolumeSource.setServer("10.101.223.153");
+		nfsVolumeSource.setServer("10.100.129.248");
 		// nfsVolumeSource.setServer("nfs-service");
 
 		Volume volume_1 = new Volume();
 		volume_1.setName("nfs-volume");
 		volume_1.setNfs(nfsVolumeSource);
-
 		VolumeMount volumeMount_1 = new VolumeMount();
 		volumeMount_1.setName("nfs-volume");
-		// volumeMount_1.setMountPath("/var/nfs");
-		volumeMount_1.setMountPath("/var");
+		volumeMount_1.setMountPath("/var/nfs");
+		// volumeMount_1.setMountPath("/var");
 
 		List<String> args = new ArrayList<>();
 		args.add("-c");

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.SecurityContext;
@@ -36,12 +37,22 @@ public class NFSCreator {
 	public void createNFS(String nameSpace) {
 		createNFSService(nameSpace);
 		createNFSPod(nameSpace);
+		createPersistentVolume(nameSpace);
+	}
+
+	private void createPersistentVolume(String nameSpace) {
+		// TODO Auto-generated method stub
+
 	}
 
 	private void createNFSPod(String nameSpace) {
 
 		SecurityContext secContext = new SecurityContext();
 		secContext.setPrivileged(true);
+
+		ContainerPort port = new ContainerPort();
+		port.setContainerPort(2049);
+		port.setProtocol("TCP");
 
 		Container nfsContainer = new ContainerBuilder()
 			.withName("nfs-server-container")
@@ -75,16 +86,49 @@ public class NFSCreator {
 			.endMetadata()
 			.withNewSpec()
 			.withSelector(Collections.singletonMap("role", "nfs"))
+
 			.addNewPort()
-			.withName("tcp-2049")
+			.withName("tcp-8000")
 			.withProtocol("TCP")
-			.withPort(2049)
+			.withPort(8000)
 			.endPort()
+
+			.addNewPort()
+			.withName("tcp-111")
+			.withProtocol("TCP")
+			.withPort(111)
+			.endPort()
+
 			.addNewPort()
 			.withName("udp-111")
 			.withProtocol("UDP")
 			.withPort(111)
 			.endPort()
+
+			.addNewPort()
+			.withName("tcp-2049")
+			.withProtocol("TCP")
+			.withPort(2049)
+			.endPort()
+
+			.addNewPort()
+			.withName("udp-2049")
+			.withProtocol("UDP")
+			.withPort(2049)
+			.endPort()
+
+			.addNewPort()
+			.withName("tcp-40001")
+			.withProtocol("TCP")
+			.withPort(40001)
+			.endPort()
+
+			.addNewPort()
+			.withName("udp-40001")
+			.withProtocol("UDP")
+			.withPort(40001)
+			.endPort()
+
 			.endSpec()
 			.build();
 
@@ -100,6 +144,8 @@ public class NFSCreator {
 			.withName(nfsService.getMetadata()
 				.getName())
 			.getURL("tcp-2049");
+
+		log.debug("TCPServiceUrl is=" + tcpServiceURL);
 
 		String udpServiceURL = client.services()
 			.inNamespace(nameSpace)
