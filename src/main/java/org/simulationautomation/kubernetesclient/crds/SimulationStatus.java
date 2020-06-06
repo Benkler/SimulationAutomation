@@ -7,7 +7,7 @@ import io.fabric8.kubernetes.api.model.KubernetesResource;
 @JsonDeserialize(
         using = JsonDeserializer.None.class
 )
-public class SimulationCRStatus implements KubernetesResource {
+public class SimulationStatus implements KubernetesResource {
     public int getAvailableReplicas() {
         return availableReplicas;
     }

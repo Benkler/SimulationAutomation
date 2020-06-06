@@ -64,7 +64,7 @@ public class NFSCreator {
 
 		Pod pod = new PodBuilder().withApiVersion("v1")
 			.withNewMetadata()
-			.withGenerateName("nfs-server-pod")
+			.withGenerateName("nfs-server-pod-")
 			.withLabels(Collections.singletonMap("role", "nfs"))
 			.endMetadata()
 			.withNewSpec()
@@ -81,11 +81,13 @@ public class NFSCreator {
 	}
 
 	private void createNFSService(String nameSpace) {
-		Service nfsService = new ServiceBuilder().withNewMetadata()
+		Service nfsService = new ServiceBuilder().withApiVersion("v1")
+			.withNewMetadata()
 			.withName("nfs-service")
 			.endMetadata()
 			.withNewSpec()
 			.withSelector(Collections.singletonMap("role", "nfs"))
+			.withClusterIP("10.100.129.240")
 
 			.addNewPort()
 			.withName("tcp-8000")
@@ -135,6 +137,12 @@ public class NFSCreator {
 		nfsService = client.services()
 			.inNamespace(nameSpace)
 			.createOrReplace(nfsService);
+
+		log.info("Ip retrieved");
+		for (String ip : nfsService.getSpec()
+			.getExternalIPs()) {
+			log.info("Ip retrieved=" + ip);
+		}
 
 		log.info("Created Service wit name " + nfsService.getMetadata()
 			.getName());

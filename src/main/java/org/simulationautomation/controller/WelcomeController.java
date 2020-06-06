@@ -2,7 +2,6 @@ package org.simulationautomation.controller;
 
 import java.util.List;
 
-import org.simulationautomation.kubernetesclient.api.ICustomResourceBuilder;
 import org.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
 import org.simulationautomation.kubernetesclient.operator.SimulationOperator;
 import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
@@ -23,16 +22,14 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 @Component
 public class WelcomeController {
 
-	private static final Logger log = LoggerFactory.getLogger(WelcomeController.class);
+	private static final Logger log = LoggerFactory
+		.getLogger(WelcomeController.class);
 
 	@Autowired
 	KubernetesClient client;
 
 	@Autowired
 	ICustomResourceDefinitionBuilder crdBuilder;
-
-	@Autowired
-	ICustomResourceBuilder crBuilder;
 
 	@Autowired
 	CustomNamespaceBuilder nsBuilder;
@@ -46,16 +43,20 @@ public class WelcomeController {
 
 		Div div = new Div();
 
-		List<Pod> podList = client.pods().list().getItems();
+		List<Pod> podList = client.pods()
+			.list()
+			.getItems();
 
-		P p = new P().appendText(
-				"Welcome! There are " + podList.size() + " pods registered in namespace:" + client.getNamespace());
+		P p = new P().appendText("Welcome! There are " + podList.size()
+				+ " pods registered in namespace:" + client.getNamespace());
 		div.appendChild(p);
 
 		for (Pod pod : podList) {
 			StringBuilder sb = new StringBuilder();
-			String podName = pod.getMetadata().getName();
-			String podUid = pod.getMetadata().getUid();
+			String podName = pod.getMetadata()
+				.getName();
+			String podUid = pod.getMetadata()
+				.getUid();
 			sb.append("pod name=" + podName + "\n");
 			sb.append("		pod id=" + podUid + "\n");
 

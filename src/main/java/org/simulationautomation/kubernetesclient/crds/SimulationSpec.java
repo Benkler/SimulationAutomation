@@ -12,7 +12,7 @@ import io.fabric8.kubernetes.api.model.KubernetesResource;
  *
  */
 @JsonDeserialize(using = JsonDeserializer.None.class)
-public class SimulationCRSpec implements KubernetesResource {
+public class SimulationSpec implements KubernetesResource {
 
 	private static final long serialVersionUID = -424650618584495148L;
 

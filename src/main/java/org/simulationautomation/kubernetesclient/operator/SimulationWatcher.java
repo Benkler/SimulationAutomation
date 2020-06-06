@@ -1,6 +1,6 @@
 package org.simulationautomation.kubernetesclient.operator;
 
-import org.simulationautomation.kubernetesclient.crds.SimulationCR;
+import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.simulation.SimulationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
 
 @Component
-public class SimulationWatcher implements Watcher<SimulationCR> {
+public class SimulationWatcher implements Watcher<Simulation> {
 
 	private Logger log = LoggerFactory.getLogger(SimulationWatcher.class);
 
@@ -19,7 +19,7 @@ public class SimulationWatcher implements Watcher<SimulationCR> {
 	private SimulationService simulationsService;
 
 	@Override
-	public void eventReceived(Watcher.Action action, SimulationCR simulation) {
+	public void eventReceived(Watcher.Action action, Simulation simulation) {
 		if (action.equals(Action.ADDED)) {
 			log.info("Adding SimulationCR with name=: " + simulation.getMetadata().getName());
 			simulationsService.addSimulation(simulation.getMetadata().getName(), simulation);

@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.simulationautomation.kubernetesclient.crds.SimulationCR;
+import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.simulation.SimulationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,14 +42,14 @@ public class SimulationPodWatcher implements Watcher<Pod> {
 
 		if (action.equals(Action.ADDED)) {
 			log.info("Handle Add Pod: " + pod.getMetadata().getName());
-			SimulationCR simulation = getSimulationFromPod(pod);
+			Simulation simulation = getSimulationFromPod(pod);
 
 		}
 
 		if (action.equals(Action.MODIFIED)) {
 
 			log.info("Handle Modify Pod: " + pod.getMetadata().getName());
-			SimulationCR simulation = getSimulationFromPod(pod);
+			Simulation simulation = getSimulationFromPod(pod);
 			// simulationsService.addSimulation(pod.getMetadata().getName(), pod);
 
 		}
@@ -64,10 +64,10 @@ public class SimulationPodWatcher implements Watcher<Pod> {
 		}
 	}
 
-	private SimulationCR getSimulationFromPod(Pod pod) {
+	private Simulation getSimulationFromPod(Pod pod) {
 		OwnerReference ownerReference = getControllerOf(pod);
 
-		SimulationCR simulation = simulationsService.getSimulation(ownerReference.getName());
+		Simulation simulation = simulationsService.getSimulation(ownerReference.getName());
 		if (simulation != null) {
 			log.info("Simulation found for pod with name: " + pod.getMetadata().getName());
 

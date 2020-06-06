@@ -17,19 +17,21 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 @Configuration
 public class ClientProducer {
 
-	private static final Logger log = LoggerFactory.getLogger(ClientProducer.class);
+	private static final Logger log = LoggerFactory
+		.getLogger(ClientProducer.class);
 
 	@Bean(name = "namespace")
 	@Scope("singleton")
 	public String findMyCurrentNameSpace() {
 
 		try {
-			String nameSpace = new String(
-					Files.readAllBytes(Paths.get("var/run/secrets/kubernetes.io/serviceaccount/namespace")));
+			String nameSpace = new String(Files.readAllBytes(Paths.get(
+					"var/run/secrets/kubernetes.io/serviceaccount/namespace")));
 			log.info("Current namespace=" + nameSpace);
 			return nameSpace;
 		} catch (IOException e) {
-			log.warn("Error while retrieving namespace. Message: " + e + "\n Fallback to namespace 'default'");
+			log.warn("Error while retrieving namespace. Message: " + e
+					+ "\n Fallback to namespace 'default'");
 			return "default";
 		}
 
@@ -37,13 +39,13 @@ public class ClientProducer {
 
 	@Bean
 	@Scope("singleton")
-	public KubernetesClient makeDefaultClient(@Qualifier("namespace") String namespace) {
+	public KubernetesClient makeDefaultClient(
+			@Qualifier("namespace") String namespace) {
 
 		log.info("Kubernetes Client created in namespace=" + namespace);
 
-		// TODO why not using given namespace
-		// return new DefaultKubernetesClient().inNamespace(namespace);
-		return new DefaultKubernetesClient();
+		return new DefaultKubernetesClient().inNamespace(namespace);
+		// return new DefaultKubernetesClient();
 
 	}
 

@@ -48,7 +48,7 @@ public class ApplicationStartupManager
 		clearCluster();
 		nfsCreator.createNFS(SIMULATION_NAMESPACE);
 		simulationOperator.init();
-		createpods();
+		// createpods();
 
 	}
 
@@ -64,7 +64,7 @@ public class ApplicationStartupManager
 
 		NFSVolumeSource nfsVolumeSource = new NFSVolumeSource();
 		nfsVolumeSource.setPath("/");
-		nfsVolumeSource.setServer("10.100.129.248");
+		nfsVolumeSource.setServer("10.100.129.240");
 		// nfsVolumeSource.setServer("nfs-service");
 
 		Volume volume_1 = new Volume();

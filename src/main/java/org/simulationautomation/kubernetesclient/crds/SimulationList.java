@@ -8,7 +8,7 @@ import io.fabric8.kubernetes.client.CustomResourceList;
  * @author Niko Benkler
  *
  */
-public class SimulationCRList extends CustomResourceList<SimulationCR> {
+public class SimulationList extends CustomResourceList<Simulation> {
 
 	/**
 	 * 

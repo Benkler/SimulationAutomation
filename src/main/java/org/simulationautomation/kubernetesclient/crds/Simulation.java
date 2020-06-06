@@ -9,25 +9,25 @@ import io.fabric8.kubernetes.client.CustomResource;
  * @author Niko Benkler
  *
  */
-public class SimulationCR extends CustomResource {
+public class Simulation extends CustomResource {
 
 	private static final long serialVersionUID = 7231247064923378701L;
-	private SimulationCRSpec spec;
-	private SimulationCRStatus status;
+	private SimulationSpec spec;
+	private SimulationStatus status;
 
-	public SimulationCRSpec getSpec() {
+	public SimulationSpec getSpec() {
 		return spec;
 	}
 
-	public void setSpec(SimulationCRSpec spec) {
+	public void setSpec(SimulationSpec spec) {
 		this.spec = spec;
 	}
 
-	public SimulationCRStatus getStatus() {
+	public SimulationStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus(SimulationCRStatus status) {
+	public void setStatus(SimulationStatus status) {
 		this.status = status;
 	}
 
