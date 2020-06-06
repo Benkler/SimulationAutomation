@@ -74,18 +74,20 @@ public class SimulationOperator {
 	ICustomResourceBuilder customResourceBuilder;
 
 	/*
-	 * Init can only be called if all the required CRDs are present - It creates the
-	 * CRD clients to be able to watch and execute operations - It loads the
-	 * existing resources (current state in the cluster) - It register the watches
-	 * for our CRDs
+	 * Init can only be called if all the required CRDs are present - It creates
+	 * the CRD clients to be able to watch and execute operations - It loads the
+	 * existing resources (current state in the cluster) - It register the
+	 * watches for our CRDs
 	 */
 	public void init() {
 		nsBuilder.createNamespace(SIMULATION_NAMESPACE);
 		registerSimulationCRD();
-		// Creating CRDs Clients
-		simulationCRDClient = k8SCoreRuntime.customResourcesClient(simulationCRD, SimulationCR.class,
-				SimulationCRList.class, SimulationCRDoneable.class);
-		loadExistingResources();
+		// Creating CRD Client for simulation
+		simulationCRDClient = k8SCoreRuntime.customResourcesClient(
+				simulationCRD, SimulationCR.class, SimulationCRList.class,
+				SimulationCRDoneable.class);
+		// Load existing custom resources
+		deleteExistingSimulationsResources();
 		registerSimulationWatch();
 
 	}
@@ -98,48 +100,60 @@ public class SimulationOperator {
 	 * @return
 	 */
 	public List<SimulationCR> listExistingSimulations() {
-		return simulationCRDClient.list().getItems();
+		return simulationCRDClient.list()
+			.getItems();
 	}
 
 	private void registerSimulationCRD() {
 
 		simulationCRD = crdBuilder.getCRD();
 		k8SCoreRuntime.registerCustomResourceDefinition(simulationCRD);
-		k8SCoreRuntime.registerCustomKind(SIMULATION_CRD_GROUP + "/v1", SIMULATION_CRD_KIND, SimulationCR.class);
+		k8SCoreRuntime.registerCustomKind(SIMULATION_CRD_GROUP + "/v1",
+				SIMULATION_CRD_KIND, SimulationCR.class);
 
-		log.info("Custom resource definition successfully registered");
+		log.info("SimulationCRD successfully registered");
 	}
 
 	/*
-	 * Load existing instances of our CRDs - This checks the existing resources and
-	 * make sure that they are loaded correctly - This also performs the binding of
-	 * a service to its app
+	 * Delete existing resources after startup to avoid clashes in resource
+	 * version
 	 */
-	private void loadExistingResources() {
-		// Load Existing Applications
-		List<SimulationCR> applicationList = simulationCRDClient.list().getItems();
-		if (!applicationList.isEmpty()) {
-			simulationResourceVersion = applicationList.get(0).getMetadata().getResourceVersion();
-			log.info("Simulation Resource Version: " + simulationResourceVersion);
-			applicationList.forEach(app -> {
-				simulationsService.addSimulation(app.getMetadata().getName(), app);
-				log.info("Simulation " + app.getMetadata().getName() + " found. Add to SimulationService.");
-			});
+	private void deleteExistingSimulationsResources() {
+		// Load Existing Simulations
+		List<SimulationCR> simulationList = simulationCRDClient.list()
+			.getItems();
 
-		}
+		simulationCRDClient.delete();
+
+		// for(SimulationCR simulation : simulationList) {
+		//
+		// }
+		//
+		// if (!simulationList.isEmpty()) {
+		//
+		// simulationList.forEach(simulation -> {
+		// simulationsService.addSimulation(simulation.getMetadata()
+		// .getName(), simulation);
+		// log.info("Simulation " + simulation.getMetadata()
+		// .getName() + " found. Add to SimulationService.");
+		// });
+		//
+		// }
 
 	}
 
 	/*
-	 * Register Simulation Watch - This watch is in charge of adding and removing
-	 * apps to/from the In memory desired state
+	 * Register Simulation Watch - This watcher is in charge of SimulationCRs
 	 */
 	private void registerSimulationWatch() {
 		log.info("Registering CRD Watch");
-		simulationCRDClient.withResourceVersion(simulationResourceVersion).watch(simulationWatcher);
+		// TODO was ist ResourceVersion
+		// simulationCRDClient.withResourceVersion(simulationResourceVersion)
+		simulationCRDClient.watch(simulationWatcher);
 		// client.pods().withResourceVersion(simulationResourceVersion).watch(simulationPodWatcher);
 		log.info("Registering Pod Watch");
-		client.pods().watch(simulationPodWatcher);
+		client.pods()
+			.watch(simulationPodWatcher);
 
 	}
 
@@ -154,19 +168,21 @@ public class SimulationOperator {
 	}
 
 	/**
-	 * Create a simulation custom resource with given name in simulation namespace.
-	 * </br>
+	 * Create a simulation custom resource with given name in simulation
+	 * namespace. </br>
 	 * 
 	 * @param name
 	 */
 	public void createSimulation(String name) {
+		log.info("Trying to create simulation with name=" + name);
 		customResourceBuilder.createCustomResource(name, SIMULATION_NAMESPACE);
 		// Busy waiting
-		while (simulationsService.getSimulation(name) == null)
-			;
+		// Future?
+		while (simulationsService.getSimulation(name) == null);
 
 		SimulationCR simulation = simulationsService.getSimulation(name);
-		addPod(simulation);
+		addSimulationPod(simulation);
+		log.info("Successfully added simulation with name=" + name);
 
 	}
 
@@ -174,11 +190,13 @@ public class SimulationOperator {
 	 * 
 	 * @param simulation
 	 */
-	public void addPod(SimulationCR simulation) {
-		log.info("Trying to add pod with name=" + simulation.getMetadata().getName() + " in namespace="
-				+ SIMULATION_NAMESPACE);
+	private void addSimulationPod(SimulationCR simulation) {
+		log.info("Trying to add pod with name=" + simulation.getMetadata()
+			.getName() + " in namespace=" + SIMULATION_NAMESPACE);
 		Pod pod = createNewPod(simulation);
-		client.pods().inNamespace(SIMULATION_NAMESPACE).create(pod);
+		client.pods()
+			.inNamespace(SIMULATION_NAMESPACE)
+			.create(pod);
 
 	}
 
@@ -186,19 +204,36 @@ public class SimulationOperator {
 
 		Container container = createSimulationContainer(simulation);
 
-		return new PodBuilder().withNewMetadata().withGenerateName(simulation.getMetadata().getName() + "-pod")
-				.withNamespace(simulation.getMetadata().getNamespace())
-				.withLabels(Collections.singletonMap("app", simulation.getMetadata().getName())).addNewOwnerReference()
-				.withController(true).withKind(SIMULATION_CRD_KIND).withApiVersion("demo.k8s.io/v1alpha1")
-				.withName(simulation.getMetadata().getName()).withNewUid(simulation.getMetadata().getUid())
-				.endOwnerReference().endMetadata().withNewSpec().withContainers(container)
-				.withRestartPolicy(POD_RESTART_POLICY).endSpec().build();
+		return new PodBuilder().withNewMetadata()
+			.withGenerateName(simulation.getMetadata()
+				.getName() + "-pod")
+			.withNamespace(simulation.getMetadata()
+				.getNamespace())
+			.withLabels(Collections.singletonMap("app", simulation.getMetadata()
+				.getName()))
+			.addNewOwnerReference()
+			.withController(true)
+			.withKind(SIMULATION_CRD_KIND)
+			.withApiVersion("demo.k8s.io/v1alpha1")
+			.withName(simulation.getMetadata()
+				.getName())
+			.withNewUid(simulation.getMetadata()
+				.getUid())
+			.endOwnerReference()
+			.endMetadata()
+			.withNewSpec()
+			.withContainers(container)
+			.withRestartPolicy(POD_RESTART_POLICY)
+			.endSpec()
+			.build();
 	}
 
 	private Container createSimulationContainer(SimulationCR simulation) {
 
-		return new ContainerBuilder().withName("palladiosumlation").withImage("palladiosimulator/eclipse")
-				.withImagePullPolicy(IMAGE_PULL_POLICY).build();
+		return new ContainerBuilder().withName("palladiosumlation")
+			.withImage("palladiosimulator/eclipse")
+			.withImagePullPolicy(IMAGE_PULL_POLICY)
+			.build();
 	}
 
 	/*
@@ -207,9 +242,11 @@ public class SimulationOperator {
 	private boolean areRequiredCRDsPresent() {
 		try {
 
-			k8SCoreRuntime.registerCustomKind(SIMULATION_CRD_GROUP + "/v1", SIMULATION_CRD_KIND, SimulationCR.class);
+			k8SCoreRuntime.registerCustomKind(SIMULATION_CRD_GROUP + "/v1",
+					SIMULATION_CRD_KIND, SimulationCR.class);
 
-			CustomResourceDefinitionList crds = k8SCoreRuntime.getCustomResourceDefinitionList();
+			CustomResourceDefinitionList crds = k8SCoreRuntime
+				.getCustomResourceDefinitionList();
 			for (CustomResourceDefinition crd : crds.getItems()) {
 				ObjectMeta metadata = crd.getMetadata();
 				if (metadata != null) {
@@ -234,53 +271,59 @@ public class SimulationOperator {
 		return false;
 	}
 
-	/** Checks whether pod is Failed or Successfully finished command execution */
+	/**
+	 * Checks whether pod is Failed or Successfully finished command execution
+	 */
 	static class JobFinishedPredicate implements Predicate<Pod> {
 		@Override
 		public Boolean apply(Pod pod) {
 			if (pod.getStatus() == null) {
 				return false;
 			}
-			switch (pod.getStatus().getPhase()) {
-			case POD_PHASE_FAILED:
-				// fall through
-			case POD_PHASE_SUCCEEDED:
-				// job is finished.
-				return true;
-			default:
-				// job is not finished.
-				return false;
+			switch (pod.getStatus()
+				.getPhase()) {
+				case POD_PHASE_FAILED :
+					// fall through
+				case POD_PHASE_SUCCEEDED :
+					// job is finished.
+					return true;
+				default :
+					// job is not finished.
+					return false;
 			}
 		}
 	}
 
-//	  void execute(String workspaceId, String[] commandBase, String... arguments) {
-//		    final String jobName = commandBase[0];
-//		    final String podName = jobName + '-' + workspaceId;
-//		    final String[] command = buildCommand(commandBase, arguments);
-//		    final Pod pod = newPod(podName, command);
-//		    OpenShiftPods pods = null;
-//		    try {
-//		      pods = factory.create(workspaceId).pods();
-//		      pods.create(pod);
-//		      final Pod finished = pods.wait(podName, WAIT_POD_TIMEOUT_MIN, POD_PREDICATE::apply);
-//		      if (POD_PHASE_FAILED.equals(finished.getStatus().getPhase())) {
-//		        LOG.error("Job command '%s' execution is failed.", Arrays.toString(command));
-//		      }
-//		    } catch (InfrastructureException ex) {
-//		      LOG.error(
-//		          "Unable to perform '{}' command for the workspace '{}' cause: '{}'",
-//		          Arrays.toString(command),
-//		          workspaceId,
-//		          ex.getMessage());
-//		    } finally {
-//		      if (pods != null) {
-//		        try {
-//		          pods.delete(podName);
-//		        } catch (InfrastructureException ignored) {
-//		        }
-//		      }
-//		    }
-//		  }
+	// void execute(String workspaceId, String[] commandBase, String...
+	// arguments) {
+	// final String jobName = commandBase[0];
+	// final String podName = jobName + '-' + workspaceId;
+	// final String[] command = buildCommand(commandBase, arguments);
+	// final Pod pod = newPod(podName, command);
+	// OpenShiftPods pods = null;
+	// try {
+	// pods = factory.create(workspaceId).pods();
+	// pods.create(pod);
+	// final Pod finished = pods.wait(podName, WAIT_POD_TIMEOUT_MIN,
+	// POD_PREDICATE::apply);
+	// if (POD_PHASE_FAILED.equals(finished.getStatus().getPhase())) {
+	// LOG.error("Job command '%s' execution is failed.",
+	// Arrays.toString(command));
+	// }
+	// } catch (InfrastructureException ex) {
+	// LOG.error(
+	// "Unable to perform '{}' command for the workspace '{}' cause: '{}'",
+	// Arrays.toString(command),
+	// workspaceId,
+	// ex.getMessage());
+	// } finally {
+	// if (pods != null) {
+	// try {
+	// pods.delete(podName);
+	// } catch (InfrastructureException ignored) {
+	// }
+	// }
+	// }
+	// }
 
 }
