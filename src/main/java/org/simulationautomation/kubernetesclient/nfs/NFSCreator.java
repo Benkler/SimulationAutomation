@@ -51,7 +51,8 @@ public class NFSCreator {
 			.addAllToArgs(Collections.singletonList("/exports"))
 			.build();
 
-		Pod pod = new PodBuilder().withNewMetadata()
+		Pod pod = new PodBuilder().withApiVersion("v1")
+			.withNewMetadata()
 			.withGenerateName("nfs-server-pod")
 			.withLabels(Collections.singletonMap("role", "nfs"))
 			.endMetadata()
