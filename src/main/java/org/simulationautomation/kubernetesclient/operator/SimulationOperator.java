@@ -4,12 +4,12 @@ import static org.simulationautomation.kubernetesclient.simulation.SimulationPro
 import static org.simulationautomation.kubernetesclient.simulation.SimulationProperties.SIMULATION_KIND;
 import static org.simulationautomation.kubernetesclient.simulation.SimulationProperties.SIMULATION_NAMESPACE;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationDoneable;
 import org.simulationautomation.kubernetesclient.crds.SimulationList;
+import org.simulationautomation.kubernetesclient.simulation.SimulationPodCreator;
 import org.simulationautomation.kubernetesclient.simulation.SimulationService;
 import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
 import org.simulationautomation.kubernetesclient.util.SimulationCRDUtil;
@@ -19,11 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.fabric8.kubernetes.api.builder.Predicate;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
@@ -172,47 +169,11 @@ public class SimulationOperator {
 	private void addSimulationPod(Simulation simulation) {
 		log.info("Trying to add pod with name=" + simulation.getMetadata()
 			.getName() + " in namespace=" + SIMULATION_NAMESPACE);
-		Pod pod = createNewPod(simulation);
+		Pod pod = SimulationPodCreator.createSimulationPod(simulation);
 		client.pods()
 			.inNamespace(SIMULATION_NAMESPACE)
 			.create(pod);
 
-	}
-
-	private Pod createNewPod(Simulation simulation) {
-
-		Container container = createSimulationContainer(simulation);
-
-		return new PodBuilder().withNewMetadata()
-			.withGenerateName(simulation.getMetadata()
-				.getName() + "-pod")
-			.withNamespace(simulation.getMetadata()
-				.getNamespace())
-			.withLabels(Collections.singletonMap("app", simulation.getMetadata()
-				.getName()))
-			.addNewOwnerReference()
-			.withController(true)
-			.withKind(SIMULATION_KIND)
-			.withApiVersion("demo.k8s.io/v1alpha1")
-			.withName(simulation.getMetadata()
-				.getName())
-			.withNewUid(simulation.getMetadata()
-				.getUid())
-			.endOwnerReference()
-			.endMetadata()
-			.withNewSpec()
-			.withContainers(container)
-			.withRestartPolicy(POD_RESTART_POLICY)
-			.endSpec()
-			.build();
-	}
-
-	private Container createSimulationContainer(Simulation simulation) {
-
-		return new ContainerBuilder().withName("palladiosumlation")
-			.withImage("palladiosimulator/eclipse")
-			.withImagePullPolicy(IMAGE_PULL_POLICY)
-			.build();
 	}
 
 	/**
