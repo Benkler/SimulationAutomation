@@ -1,6 +1,6 @@
 package org.simulationautomation.kubernetesclient.operator;
 
-import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_CRD_KIND;
+import static org.simulationautomation.kubernetesclient.simulation.SimulationProperties.SIMULATION_KIND;
 
 import java.util.HashSet;
 import java.util.List;
@@ -36,7 +36,7 @@ public class SimulationPodWatcher implements Watcher<Pod> {
 
 		OwnerReference ownerReference = getControllerOf(pod);
 
-		if (ownerReference == null || !ownerReference.getKind().equalsIgnoreCase(SIMULATION_CRD_KIND)) {
+		if (ownerReference == null || !ownerReference.getKind().equalsIgnoreCase(SIMULATION_KIND)) {
 			return;
 		}
 

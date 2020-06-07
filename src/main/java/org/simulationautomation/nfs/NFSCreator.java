@@ -1,4 +1,4 @@
-package org.simulationautomation.kubernetesclient.nfs;
+package org.simulationautomation.nfs;
 
 import java.util.Collections;
 
@@ -21,6 +21,11 @@ import io.fabric8.kubernetes.client.KubernetesClient;
  * Based on
  * https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-volumes-example-nfs-persistent-volume.html
  * 
+ * </br>
+ * This class creates a Pod with a standard Network File System (NFS). For now,
+ * the NFS is used for data exchange between the pods. It can be replaces with a
+ * cloud-based NFS if necessary.
+ * 
  * @author Niko Benkler
  *
  */
@@ -37,14 +42,13 @@ public class NFSCreator {
 	public void createNFS(String nameSpace) {
 		createNFSService(nameSpace);
 		createNFSPod(nameSpace);
-		createPersistentVolume(nameSpace);
 	}
 
-	private void createPersistentVolume(String nameSpace) {
-		// TODO Auto-generated method stub
-
-	}
-
+	/**
+	 * Create NFS and export the folder under "/exports"
+	 * 
+	 * @param nameSpace
+	 */
 	private void createNFSPod(String nameSpace) {
 
 		SecurityContext secContext = new SecurityContext();
@@ -80,6 +84,11 @@ public class NFSCreator {
 
 	}
 
+	/**
+	 * Create Service an open ports, so that other pods can use the nfs
+	 * 
+	 * @param nameSpace
+	 */
 	private void createNFSService(String nameSpace) {
 		Service nfsService = new ServiceBuilder().withApiVersion("v1")
 			.withNewMetadata()
@@ -138,12 +147,6 @@ public class NFSCreator {
 			.inNamespace(nameSpace)
 			.createOrReplace(nfsService);
 
-		log.info("Ip retrieved");
-		for (String ip : nfsService.getSpec()
-			.getExternalIPs()) {
-			log.info("Ip retrieved=" + ip);
-		}
-
 		log.info("Created Service wit name " + nfsService.getMetadata()
 			.getName());
 
@@ -153,15 +156,13 @@ public class NFSCreator {
 				.getName())
 			.getURL("tcp-2049");
 
-		log.debug("TCPServiceUrl is=" + tcpServiceURL);
+		log.info("TCPServiceUrl is=" + tcpServiceURL);
 
 		String udpServiceURL = client.services()
 			.inNamespace(nameSpace)
 			.withName(nfsService.getMetadata()
 				.getName())
 			.getURL("udp-111");
-
-		log.info("TCP Service URL", tcpServiceURL);
 
 	}
 

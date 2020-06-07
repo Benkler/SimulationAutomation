@@ -25,28 +25,35 @@ public class K8SCoreRuntime {
 	@Autowired
 	private KubernetesClient kubernetesClient;
 
-	public void registerCustomKind(String apiVersion, String kind, Class<? extends KubernetesResource> clazz) {
+	public void registerCustomKind(String apiVersion, String kind,
+			Class<? extends KubernetesResource> clazz) {
 		KubernetesDeserializer.registerCustomKind(apiVersion, kind, clazz);
 	}
 
 	public CustomResourceDefinitionList getCustomResourceDefinitionList() {
-		return kubernetesClient.customResourceDefinitions().list();
+		return kubernetesClient.customResourceDefinitions()
+			.list();
 	}
 
-	public <T extends HasMetadata, L extends KubernetesResourceList, D extends Doneable<T>> MixedOperation<T, L, D, Resource<T, D>> customResourcesClient(
-			CustomResourceDefinition crd, Class<T> resourceType, Class<L> listClass, Class<D> doneClass) {
-		return kubernetesClient.customResources(crd, resourceType, listClass, doneClass);
+	public <T extends HasMetadata, L extends KubernetesResourceList<?>, D extends Doneable<T>> MixedOperation<T, L, D, Resource<T, D>> customResourcesClient(
+			CustomResourceDefinition crd, Class<T> resourceType,
+			Class<L> listClass, Class<D> doneClass) {
+		return kubernetesClient.customResources(crd, resourceType, listClass,
+				doneClass);
 	}
 
-	public <T extends HasMetadata, L extends KubernetesResourceList, D extends Doneable<T>> NonNamespaceOperation<T, L, D, Resource<T, D>> customResourcesClientInNameSpace(
-			CustomResourceDefinition crd, Class<T> resourceType, Class<L> listClass, Class<D> doneClass,
-			String namespace) {
-		return kubernetesClient.customResources(crd, resourceType, listClass, doneClass).inNamespace(namespace);
+	public <T extends HasMetadata, L extends KubernetesResourceList<?>, D extends Doneable<T>> NonNamespaceOperation<T, L, D, Resource<T, D>> customResourcesClientInNameSpace(
+			CustomResourceDefinition crd, Class<T> resourceType,
+			Class<L> listClass, Class<D> doneClass, String namespace) {
+		return kubernetesClient
+			.customResources(crd, resourceType, listClass, doneClass)
+			.inNamespace(namespace);
 	}
 
 	public void registerCustomResourceDefinition(CustomResourceDefinition crd) {
 		// Apply CRD object onto your Kubernetes cluster
-		kubernetesClient.customResourceDefinitions().createOrReplace(crd);
+		kubernetesClient.customResourceDefinitions()
+			.createOrReplace(crd);
 	}
 
 }

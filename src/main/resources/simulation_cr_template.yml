@@ -1,5 +1,0 @@
-apiVersion: palladio.org/v1
-kind: Simulation
-metadata:
-  name: sim
-  namespace: default

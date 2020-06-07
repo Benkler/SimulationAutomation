@@ -1,19 +1,18 @@
 package org.simulationautomation.kubernetesclient.operator;
 
-import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_CRD_GROUP;
-import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_CRD_KIND;
-import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_CRD_NAME;
-import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_NAMESPACE;
+import static org.simulationautomation.kubernetesclient.simulation.SimulationProperties.SIMULATION_GROUP;
+import static org.simulationautomation.kubernetesclient.simulation.SimulationProperties.SIMULATION_KIND;
+import static org.simulationautomation.kubernetesclient.simulation.SimulationProperties.SIMULATION_NAMESPACE;
 
 import java.util.Collections;
 import java.util.List;
 
-import org.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationDoneable;
 import org.simulationautomation.kubernetesclient.crds.SimulationList;
 import org.simulationautomation.kubernetesclient.simulation.SimulationService;
 import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
+import org.simulationautomation.kubernetesclient.util.SimulationCRDUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,6 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -44,7 +42,7 @@ public class SimulationOperator {
 
 	private CustomResourceDefinition simulationCRD = null;
 
-	private String simulationResourceVersion;
+	// private String simulationResourceVersion;
 
 	private NonNamespaceOperation<Simulation, SimulationList, SimulationDoneable, Resource<Simulation, SimulationDoneable>> simulationCRDClient;
 
@@ -66,23 +64,19 @@ public class SimulationOperator {
 	@Autowired
 	CustomNamespaceBuilder nsBuilder;
 
-	@Autowired
-	ICustomResourceDefinitionBuilder crdBuilder;
-
-	/*
-	 * Init can only be called if all the required CRDs are present - It creates
-	 * the CRD clients to be able to watch and execute operations - It loads the
-	 * existing resources (current state in the cluster) - It register the
-	 * watches for our CRDs
+	/**
+	 * Init all necessary fields, including simulation namespace, simulation
+	 * resource definition and watcher for simulation resource definitions and
+	 * simulation pods
 	 */
 	public void init() {
 		nsBuilder.createNamespace(SIMULATION_NAMESPACE);
-		registerSimulationCRD();
+		simulationCRD = createAndRegisterSimulationCRD();
 		// Creating CRD Client for simulation
 		simulationCRDClient = k8SCoreRuntime.customResourcesClientInNameSpace(
 				simulationCRD, Simulation.class, SimulationList.class,
 				SimulationDoneable.class, SIMULATION_NAMESPACE);
-		// Load existing custom resources
+		// Delete simulations in namespace
 		deleteExistingSimulationsResources();
 		registerSimulationWatch();
 
@@ -100,14 +94,35 @@ public class SimulationOperator {
 			.getItems();
 	}
 
-	private void registerSimulationCRD() {
+	/**
+	 * Create a simulation custom resource with given name in simulation
+	 * namespace. </br>
+	 * 
+	 * @param name
+	 */
+	public void createSimulation(String name) {
 
-		simulationCRD = crdBuilder.getCRD();
-		k8SCoreRuntime.registerCustomResourceDefinition(simulationCRD);
-		k8SCoreRuntime.registerCustomKind(SIMULATION_CRD_GROUP + "/v1",
-				SIMULATION_CRD_KIND, Simulation.class);
+		log.info("Trying to create simulation with name=" + name);
+		Simulation simuCr = simulationCRDClient
+			.createOrReplace(createSimulationCR(name, SIMULATION_NAMESPACE));
+
+		simulationsService.addSimulation(simuCr.getMetadata()
+			.getName(), simuCr);
+
+		addSimulationPod(simuCr);
+		log.info("Successfully added simulation with name=" + name);
+
+	}
+
+	private CustomResourceDefinition createAndRegisterSimulationCRD() {
+
+		CustomResourceDefinition simuCRD = SimulationCRDUtil.getCRD();
+		k8SCoreRuntime.registerCustomResourceDefinition(simuCRD);
+		k8SCoreRuntime.registerCustomKind(SIMULATION_GROUP + "/v1",
+				SIMULATION_KIND, Simulation.class);
 
 		log.info("SimulationCRD successfully registered");
+		return simuCRD;
 	}
 
 	/*
@@ -129,47 +144,12 @@ public class SimulationOperator {
 	 */
 	private void registerSimulationWatch() {
 		log.info("Registering CRD Watch");
-		// TODO was ist ResourceVersion
-		// simulationCRDClient.withResourceVersion(simulationResourceVersion)
 		simulationCRDClient.watch(simulationWatcher);
-		// client.pods().withResourceVersion(simulationResourceVersion).watch(simulationPodWatcher);
+
 		log.info("Registering Pod Watch");
 		client.pods()
 			.inNamespace(SIMULATION_NAMESPACE)
 			.watch(simulationPodWatcher);
-
-	}
-
-	/*
-	 * Check that all the CRDs are found for this operator to work
-	 */
-	private boolean allCRDsFound() {
-		if (simulationCRD == null) {
-			return false;
-		}
-		return true;
-	}
-
-	/**
-	 * Create a simulation custom resource with given name in simulation
-	 * namespace. </br>
-	 * 
-	 * @param name
-	 */
-	public void createSimulation(String name) {
-		if (simulationResourceVersion == null) {
-
-		}
-
-		log.info("Trying to create simulation with name=" + name);
-		Simulation simuCr = simulationCRDClient
-			.createOrReplace(createSimulationCR(name, SIMULATION_NAMESPACE));
-
-		simulationsService.addSimulation(simuCr.getMetadata()
-			.getName(), simuCr);
-
-		addSimulationPod(simuCr);
-		log.info("Successfully added simulation with name=" + name);
 
 	}
 
@@ -179,6 +159,8 @@ public class SimulationOperator {
 		metaData.setName(name);
 		metaData.setNamespace(nameSpace);
 		simuCR.setMetadata(metaData);
+
+		// TODO set further spec
 
 		return simuCR;
 	}
@@ -210,7 +192,7 @@ public class SimulationOperator {
 				.getName()))
 			.addNewOwnerReference()
 			.withController(true)
-			.withKind(SIMULATION_CRD_KIND)
+			.withKind(SIMULATION_KIND)
 			.withApiVersion("demo.k8s.io/v1alpha1")
 			.withName(simulation.getMetadata()
 				.getName())
@@ -231,41 +213,6 @@ public class SimulationOperator {
 			.withImage("palladiosimulator/eclipse")
 			.withImagePullPolicy(IMAGE_PULL_POLICY)
 			.build();
-	}
-
-	/*
-	 * Check for Required CRDs
-	 */
-	private boolean areRequiredCRDsPresent() {
-		try {
-
-			k8SCoreRuntime.registerCustomKind(SIMULATION_CRD_GROUP + "/v1",
-					SIMULATION_CRD_KIND, Simulation.class);
-
-			CustomResourceDefinitionList crds = k8SCoreRuntime
-				.getCustomResourceDefinitionList();
-			for (CustomResourceDefinition crd : crds.getItems()) {
-				ObjectMeta metadata = crd.getMetadata();
-				if (metadata != null) {
-					String name = metadata.getName();
-
-					if (SIMULATION_CRD_NAME.equals(name)) {
-						simulationCRD = crd;
-					}
-				}
-			}
-			if (allCRDsFound()) {
-				return true;
-			} else {
-				log.error("Custom CRDs not available");
-
-				return false;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("> Init sequence not done");
-		}
-		return false;
 	}
 
 	/**

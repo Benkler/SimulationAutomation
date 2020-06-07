@@ -1,13 +1,13 @@
 package org.simulationautomation.kubernetesclient.manager;
 
-import static org.simulationautomation.kubernetesclient.simulation.SimulationCRDs.SIMULATION_NAMESPACE;
+import static org.simulationautomation.kubernetesclient.simulation.SimulationProperties.SIMULATION_NAMESPACE;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.simulationautomation.kubernetesclient.nfs.NFSCreator;
 import org.simulationautomation.kubernetesclient.operator.SimulationOperator;
+import org.simulationautomation.nfs.NFSCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +46,8 @@ public class ApplicationStartupManager
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 
 		clearCluster();
-		nfsCreator.createNFS(SIMULATION_NAMESPACE);
+
+		// nfsCreator.createNFS(SIMULATION_NAMESPACE);
 		simulationOperator.init();
 		// createpods();
 

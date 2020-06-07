@@ -2,7 +2,6 @@ package org.simulationautomation.controller;
 
 import java.util.List;
 
-import org.simulationautomation.kubernetesclient.api.ICustomResourceDefinitionBuilder;
 import org.simulationautomation.kubernetesclient.operator.SimulationOperator;
 import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
 import org.slf4j.Logger;
@@ -27,9 +26,6 @@ public class WelcomeController {
 
 	@Autowired
 	KubernetesClient client;
-
-	@Autowired
-	ICustomResourceDefinitionBuilder crdBuilder;
 
 	@Autowired
 	CustomNamespaceBuilder nsBuilder;
