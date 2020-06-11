@@ -29,7 +29,7 @@ public class SimulationService {
   }
 
   public void addSimulation(String simulationName, Simulation simulation) {
-    log.info("Add simulation to simulationService with name= " + simulationName);
+    log.info("Add simulation to simulation service: " + simulation);
     simulations.put(simulationName, simulation);
 
   }
@@ -52,6 +52,13 @@ public class SimulationService {
 
   public void updateStatus(String simulationName, SimulationStatusCode simulationSatusCode) {
     Simulation simulation = getSimulation(simulationName);
+
+    if (simulation.getStatus() == null) {
+      log.error("Status for simulation with name=" + simulationName
+          + " is null. This should not have happened");
+      return;
+    }
+
     simulation.getStatus().setStatus(simulationSatusCode);
     simulations.put(simulationName, simulation);
 
@@ -79,8 +86,8 @@ public class SimulationService {
 
   }
 
-  public SimulationStatus getSimulationStatus(String simulationName) {
-    return getSimulation(simulationName).getStatus();
+  public SimulationStatus getSimulationStatus(String simulatioUUID) {
+    return getSimulation(simulatioUUID).getStatus();
   }
 
 

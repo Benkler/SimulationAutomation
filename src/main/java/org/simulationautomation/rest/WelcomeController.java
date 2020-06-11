@@ -1,8 +1,6 @@
 package org.simulationautomation.rest;
 
 import java.util.List;
-import org.simulationautomation.kubernetesclient.crds.Simulation;
-import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 import org.simulationautomation.kubernetesclient.operator.SimulationOperator;
 import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
 import org.slf4j.Logger;
@@ -58,22 +56,7 @@ public class WelcomeController {
     return div.write();
   }
 
-  // @PostMapping("/create/{simName}")
-  @RequestMapping("/create")
-  public String createRessource() {
 
-    log.info("Create triggered");
-
-    Simulation simulation;
-    try {
-      simulation = operator.createSimulation();
-    } catch (SimulationCreationException e) {
-      return "Could not create simulation. Error Message=" + e.getMessage();
-    }
-
-
-    return "Created simulation with name simName= " + simulation.getMetadata().getName();
-  }
 
   @RequestMapping("/list")
   public String list() {

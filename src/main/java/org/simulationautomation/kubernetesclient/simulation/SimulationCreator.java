@@ -38,7 +38,7 @@ public class SimulationCreator {
 
     // Generate Spec
     SimulationSpec simuSpec = new SimulationSpec();
-    simuSpec.setUuid(customUuid);
+    // simuSpec.setUuid(customUuid);
 
     // Add to Simulation
     simuCR.setMetadata(metaData);
@@ -46,6 +46,7 @@ public class SimulationCreator {
 
     SimulationStatus status = new SimulationStatus();
     status.setStatus(SimulationStatusCode.CREATING);
+    simuCR.setStatus(status);
 
     // TODO set further spec
 

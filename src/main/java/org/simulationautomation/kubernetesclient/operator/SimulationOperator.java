@@ -105,15 +105,14 @@ public class SimulationOperator {
     Simulation createdSimulation;
     log.info("Trying to prepare simulation.");
     createdSimulation = simulationCreator.createAndPrepareSimulation();
-    log.info("Successfully prepared simulation with id=" + createdSimulation.getSpec().getUuid());
+    log.info(
+        "Successfully prepared simulation with id=" + createdSimulation.getMetadata().getName());
     Simulation persistedSimulation = simulationCRDClient.createOrReplace(createdSimulation);
     simulationsService.addSimulation(persistedSimulation.getMetadata().getName(),
         persistedSimulation);
 
     addSimulationPod(persistedSimulation);
-    log.info(
-        "Successfully added simulation with name=" + persistedSimulation.getMetadata().getName()
-            + "uuid=" + createdSimulation.getSpec().getUuid());
+    log.info("Successfully persisted simulation: " + persistedSimulation);
 
 
     simulationsService.updateStatus(persistedSimulation.getMetadata().getName(),

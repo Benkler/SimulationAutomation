@@ -11,17 +11,17 @@ public class SimulationServiceProxy {
   SimulationService simulationService;
 
 
-  public boolean isSimulationFinished(String simulationName) {
+  public boolean isSimulationFinished(String simulatioUUID) {
 
-    SimulationStatus status = simulationService.getSimulationStatus(simulationName);
+    SimulationStatus status = simulationService.getSimulationStatus(simulatioUUID);
 
     return status.getStatus().equals(SimulationStatusCode.SUCCEEDED);
 
   }
 
 
-  public boolean doesSimulationExist(String simulationName) {
-    return simulationService.getSimulation(simulationName) != null;
+  public boolean doesSimulationExist(String simulatioUUID) {
+    return simulationService.getSimulation(simulatioUUID) != null;
   }
 
 
