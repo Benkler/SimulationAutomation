@@ -10,8 +10,8 @@ import io.fabric8.kubernetes.client.CustomResourceList;
  */
 public class SimulationList extends CustomResourceList<Simulation> {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1521368070770214997L;
+  /**
+   * 
+   */
+  private static final long serialVersionUID = -1521368070770214997L;
 }

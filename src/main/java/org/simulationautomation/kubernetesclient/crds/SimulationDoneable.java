@@ -5,5 +5,7 @@ import io.fabric8.kubernetes.client.CustomResourceDoneable;
 
 
 public class SimulationDoneable extends CustomResourceDoneable<Simulation> {
-    public SimulationDoneable(Simulation resource, Function function) { super(resource, function); }
+  public SimulationDoneable(Simulation resource, Function function) {
+    super(resource, function);
+  }
 }

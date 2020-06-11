@@ -35,7 +35,7 @@ spec:
   selector:
     role: nfs-server
     
-  clusterIP: 10.100.224.55 
+  clusterIP: 10.152.183.55 
      
   ports:
     # Open the ports required by the NFS server
@@ -97,7 +97,7 @@ spec:
     spec:
       containers:
       - name: simulationautomation-k8s
-        image: simulationautomation-k8s:2.0
+        image: simulationautomation-k8s:1.0
         imagePullPolicy: "IfNotPresent"
         # Mount the NFS volume in the container
         volumeMounts:
@@ -109,7 +109,7 @@ spec:
       volumes:
       - name: nfs-volume
         nfs:
-         server: 10.100.224.55
+         server: 10.152.183.55
          path: /
 
 

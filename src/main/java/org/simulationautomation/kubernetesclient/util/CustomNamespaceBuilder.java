@@ -12,23 +12,17 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 @Component
 public class CustomNamespaceBuilder {
 
-	private static final Logger log = LoggerFactory
-		.getLogger(CustomNamespaceBuilder.class);
+  private static final Logger log = LoggerFactory.getLogger(CustomNamespaceBuilder.class);
 
-	@Autowired
-	KubernetesClient client;
+  @Autowired
+  KubernetesClient client;
 
-	public Namespace createNamespace(String name) {
-		Namespace ns = new NamespaceBuilder().withNewMetadata()
-			.withName(name)
-			.addToLabels("name", name)
-			.endMetadata()
-			.build();
-		Namespace simuNamespace = client.namespaces()
-			.createOrReplace(ns);
-		log.info("Created namespace=" + simuNamespace.getMetadata()
-			.getName());
-		return simuNamespace;
+  public Namespace createNamespace(String name) {
+    Namespace ns = new NamespaceBuilder().withNewMetadata().withName(name).addToLabels("name", name)
+        .endMetadata().build();
+    Namespace simuNamespace = client.namespaces().createOrReplace(ns);
+    log.info("Created namespace=" + simuNamespace.getMetadata().getName());
+    return simuNamespace;
 
-	}
+  }
 }

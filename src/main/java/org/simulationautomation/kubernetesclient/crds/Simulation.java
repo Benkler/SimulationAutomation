@@ -11,34 +11,34 @@ import io.fabric8.kubernetes.client.CustomResource;
  */
 public class Simulation extends CustomResource {
 
-	private static final long serialVersionUID = 7231247064923378701L;
-	private SimulationSpec spec;
-	private SimulationStatus status;
+  private static final long serialVersionUID = 7231247064923378701L;
+  private SimulationSpec spec;
+  private SimulationStatus status;
 
-	public SimulationSpec getSpec() {
-		return spec;
-	}
+  public SimulationSpec getSpec() {
+    return spec;
+  }
 
-	public void setSpec(SimulationSpec spec) {
-		this.spec = spec;
-	}
+  public void setSpec(SimulationSpec spec) {
+    this.spec = spec;
+  }
 
-	public SimulationStatus getStatus() {
-		return status;
-	}
+  public SimulationStatus getStatus() {
+    return status;
+  }
 
-	public void setStatus(SimulationStatus status) {
-		this.status = status;
-	}
+  public void setStatus(SimulationStatus status) {
+    this.status = status;
+  }
 
-	@Override
-	public String toString() {
-		return "Simulation" + "apiVersion='" + getApiVersion() + "'" + ", metadata=" + getMetadata() + ", spec=" + spec
-				+ ", status=" + status + "}";
-	}
+  @Override
+  public String toString() {
+    return "Simulation" + "apiVersion='" + getApiVersion() + "'" + ", metadata=" + getMetadata()
+        + ", spec=" + spec + ", status=" + status + "}";
+  }
 
-	@Override
-	public ObjectMeta getMetadata() {
-		return super.getMetadata();
-	}
+  @Override
+  public ObjectMeta getMetadata() {
+    return super.getMetadata();
+  }
 }

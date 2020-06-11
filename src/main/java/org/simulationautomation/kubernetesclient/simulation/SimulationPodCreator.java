@@ -1,15 +1,12 @@
 package org.simulationautomation.kubernetesclient.simulation;
 
-import static org.simulationautomation.kubernetesclient.simulation.SimulationProperties.SIMULATION_KIND;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import org.simulationautomation.kubernetesclient.crds.Simulation;
+import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.NFSVolumeSource;
@@ -19,97 +16,107 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 
 public class SimulationPodCreator {
-	static final String POD_RESTART_POLICY = "Never";
-	static final String IMAGE_PULL_POLICY = "IfNotPresent";
-	private static final Logger log = LoggerFactory
-		.getLogger(SimulationPodCreator.class);
+  private static final String POD_RESTART_POLICY = "Never";
+  private static final String IMAGE_PULL_POLICY = "IfNotPresent";
+  private static final String NFS_INPUT_NAME = "input-nfs";
+  private static final String NFS_OUTPUT_NAME = "output-nfs";
+  private static final String PALLADIO_CONTAINER_NAME = "palladiosimulation";
 
-	public static Pod createSimulationPod(Simulation simulation) {
+  private static final Logger log = LoggerFactory.getLogger(SimulationPodCreator.class);
 
-		Volume inputVolume = createNFSVolumeDefinition("Simu1", "input",
-				"Input");
-		Volume outpuVolume = createNFSVolumeDefinition("Simu1", "output",
-				"Output");
+  public static Pod createSimulationPod(Simulation simulation) {
+    String simulationName = simulation.getMetadata().getName();
 
-		Container container = createSimulationContainer(simulation);
+    log.info("Create Pod from Simulation with name= " + simulationName);
 
-		Pod pod = new PodBuilder().withApiVersion("v1")
+    Volume inputVolume = createNFSVolumeDefinition(NFS_INPUT_NAME, simulationName,
+        SimulationProperties.NFS_INPUT_FOLDER_NAME);
+    Volume outpuVolume = createNFSVolumeDefinition(NFS_OUTPUT_NAME, simulationName,
+        SimulationProperties.NFS_OUTPUT_FOLDER_NAME);
 
-			.withNewMetadata()
-			.withGenerateName(simulation.getMetadata()
-				.getName() + "-pod-")
-			.withNamespace(simulation.getMetadata()
-				.getNamespace())
-			.withLabels(Collections.singletonMap("app", simulation.getMetadata()
-				.getName()))
+    Container container = createSimulationContainer(simulation);
 
-			.addNewOwnerReference()
-			.withController(true)
-			.withKind(SIMULATION_KIND)
-			.withApiVersion("demo.k8s.io/v1alpha1")
-			.withName(simulation.getMetadata()
-				.getName())
-			.withNewUid(simulation.getMetadata()
-				.getUid())
-			.endOwnerReference()
+    Pod pod = new PodBuilder().withApiVersion("v1")
 
-			.endMetadata()
+        .withNewMetadata().withGenerateName(simulation.getMetadata().getName() + "-pod-")
+        .withNamespace(simulation.getMetadata().getNamespace())
+        .withLabels(Collections.singletonMap(SimulationProperties.SIMULATION_LABEL,
+            simulation.getMetadata().getName()))
 
-			.withNewSpec()
-			.withVolumes(inputVolume, outpuVolume)
-			.withContainers(container)
-			.withRestartPolicy(POD_RESTART_POLICY)
-			.endSpec()
-			.build();
+        .addNewOwnerReference().withController(true).withKind(SimulationProperties.SIMULATION_KIND)
+        .withApiVersion("demo.k8s.io/v1alpha1").withName(simulation.getMetadata().getName())
+        .withNewUid(simulation.getMetadata().getUid()).endOwnerReference()
 
-		return pod;
-	}
+        .endMetadata()
 
-	private static Container createSimulationContainer(Simulation simulation) {
+        .withNewSpec().withVolumes(inputVolume, outpuVolume).withContainers(container)
+        .withRestartPolicy(POD_RESTART_POLICY).endSpec().build();
 
-		// TODO was ist mit dem letzten Backslash
-		VolumeMount inputVolumeMount = createVolumeMount("input",
-				"/usr/ExperimentData");
+    return pod;
+  }
 
-		VolumeMount outputVolumeMount = createVolumeMount("output", "/result");
+  private static Container createSimulationContainer(Simulation simulation) {
+    log.info("Create simulation container for simulation with name= "
+        + simulation.getMetadata().getName());
 
-		List<String> args = new ArrayList<>();
-		// TODO rename
-		args.add(
-				"/usr/ExperimentData/model/Experiments/Scalability.experiments");
-		args.add("/usr/ExperimentData/model/Experiments/Generated.experiments");
-		return new ContainerBuilder().withName("palladiosumlation")
-			.withImage("palladiosimulator/palladio-experimentautomation")
-			.withImagePullPolicy(IMAGE_PULL_POLICY)
-			.withVolumeMounts(inputVolumeMount, outputVolumeMount)
-			.addAllToCommand(Collections
-				.singletonList("/usr/RunExperimentAutomation.sh"))
-			.addAllToArgs(args)
-			.build();
-	}
+    VolumeMount inputVolumeMount =
+        createVolumeMount(NFS_INPUT_NAME, SimulationProperties.PALLADIO_IMAGE_INPUT_MOUNT_PATH);
 
-	private static Volume createNFSVolumeDefinition(String simulationId,
-			String nfsName, String folderName) {
+    VolumeMount outputVolumeMount =
+        createVolumeMount(NFS_OUTPUT_NAME, SimulationProperties.PALLADIO_IMAGE_OUTPUT_MOUNT_PATH);
 
-		NFSVolumeSource nfsVolumeSource = new NFSVolumeSource();
-		// TODO stimmt der letzte Backslash
-		nfsVolumeSource.setPath("/" + simulationId + "/" + folderName + "/");
-		nfsVolumeSource.setServer("10.100.224.55"); // TODO use static
+    List<String> args = new ArrayList<>();
+    // TODO adapt Folder Structure
+    // TODO adapt Simulation Type
+    args.add("/usr/ExperimentData/model/Experiments/Scalability.experiments");
+    args.add("/usr/ExperimentData/model/Experiments/Generated.experiments");
+    return new ContainerBuilder().withName(PALLADIO_CONTAINER_NAME)
+        .withImage(SimulationProperties.PALLADIO_IMAGE).withImagePullPolicy(IMAGE_PULL_POLICY)
+        .withVolumeMounts(inputVolumeMount, outputVolumeMount)
+        .addAllToCommand(
+            Collections.singletonList(SimulationProperties.PALLADIO_IMAGE_ENTRY_SCRIPT_PATH))
+        .addAllToArgs(args).build();
+  }
 
-		Volume nfs_volume = new Volume();
-		nfs_volume.setName(nfsName); // TODO use static
-		nfs_volume.setNfs(nfsVolumeSource);
+  /**
+   * Create Volume Definition for Pod: </br>
+   * The path needs to match an existing folder, which was created by the simulation operator
+   * beforehand. </br>
+   * Path consists of "/simulationId/{Input|Output}/" </br>
+   * 
+   * specifying the path of an existing folder in the NFS and the name
+   * 
+   * @param simulationId
+   * @param nfsName
+   * @param folderName
+   * @return
+   */
+  private static Volume createNFSVolumeDefinition(String nfsName, String simulationId,
+      String folderName) {
 
-		return nfs_volume;
-	}
+    log.info("Create NFS Volume Definition for simulation with name= " + simulationId);
+    NFSVolumeSource nfsVolumeSource = new NFSVolumeSource();
+    nfsVolumeSource.setPath("/" + simulationId + "/" + folderName + "/");
+    nfsVolumeSource.setServer(SimulationProperties.NFS_SERVER_IP);
+    Volume nfs_volume = new Volume();
+    nfs_volume.setName(nfsName);
+    nfs_volume.setNfs(nfsVolumeSource);
 
-	private static VolumeMount createVolumeMount(String nfsName,
-			String mountPath) {
-		VolumeMount volumeMount = new VolumeMount();
+    return nfs_volume;
+  }
 
-		volumeMount.setName(nfsName);
-		volumeMount.setMountPath(mountPath);
-		return volumeMount;
-	}
+  /**
+   * Create VolumeMount for Docker Container
+   * 
+   * @param nfsName, specified in the @Volume
+   * @param mountPath, where to mount within Container
+   * @return
+   */
+  private static VolumeMount createVolumeMount(String nfsName, String mountPath) {
+    VolumeMount volumeMount = new VolumeMount();
+    volumeMount.setName(nfsName);
+    volumeMount.setMountPath(mountPath);
+    return volumeMount;
+  }
 
 }
