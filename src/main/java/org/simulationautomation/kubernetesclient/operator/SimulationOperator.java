@@ -11,13 +11,13 @@ import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationEx
 import org.simulationautomation.kubernetesclient.simulation.SimulationCreator;
 import org.simulationautomation.kubernetesclient.simulation.SimulationPodCreator;
 import org.simulationautomation.kubernetesclient.simulation.SimulationService;
+import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
 import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
 import org.simulationautomation.kubernetesclient.util.SimulationCRDUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import io.fabric8.kubernetes.api.builder.Predicate;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -29,9 +29,8 @@ public class SimulationOperator {
 
   static final String IMAGE_PULL_POLICY = "IfNotPresent";
   static final String POD_RESTART_POLICY = "Never";
-  static final String POD_PHASE_SUCCEEDED = "Succeeded";
-  static final String POD_PHASE_FAILED = "Failed";
-  private static final JobFinishedPredicate POD_PREDICATE = new JobFinishedPredicate();
+
+
 
   private Logger log = LoggerFactory.getLogger(SimulationOperator.class);
 
@@ -116,6 +115,10 @@ public class SimulationOperator {
         "Successfully added simulation with name=" + persistedSimulation.getMetadata().getName()
             + "uuid=" + createdSimulation.getSpec().getUuid());
 
+
+    simulationsService.updateStatus(persistedSimulation.getMetadata().getName(),
+        SimulationStatusCode.RUNNING);
+
     return persistedSimulation;
 
   }
@@ -167,58 +170,6 @@ public class SimulationOperator {
 
   }
 
-  /**
-   * Checks whether pod is Failed or Successfully finished command execution
-   */
-  static class JobFinishedPredicate implements Predicate<Pod> {
-    @Override
-    public Boolean apply(Pod pod) {
-      if (pod.getStatus() == null) {
-        return false;
-      }
-      switch (pod.getStatus().getPhase()) {
-        case POD_PHASE_FAILED:
-          // fall through
-        case POD_PHASE_SUCCEEDED:
-          // job is finished.
-          return true;
-        default:
-          // job is not finished.
-          return false;
-      }
-    }
-  }
 
-  // void execute(String workspaceId, String[] commandBase, String...
-  // arguments) {
-  // final String jobName = commandBase[0];
-  // final String podName = jobName + '-' + workspaceId;
-  // final String[] command = buildCommand(commandBase, arguments);
-  // final Pod pod = newPod(podName, command);
-  // OpenShiftPods pods = null;
-  // try {
-  // pods = factory.create(workspaceId).pods();
-  // pods.create(pod);
-  // final Pod finished = pods.wait(podName, WAIT_POD_TIMEOUT_MIN,
-  // POD_PREDICATE::apply);
-  // if (POD_PHASE_FAILED.equals(finished.getStatus().getPhase())) {
-  // LOG.error("Job command '%s' execution is failed.",
-  // Arrays.toString(command));
-  // }
-  // } catch (InfrastructureException ex) {
-  // LOG.error(
-  // "Unable to perform '{}' command for the workspace '{}' cause: '{}'",
-  // Arrays.toString(command),
-  // workspaceId,
-  // ex.getMessage());
-  // } finally {
-  // if (pods != null) {
-  // try {
-  // pods.delete(podName);
-  // } catch (InfrastructureException ignored) {
-  // }
-  // }
-  // }
-  // }
 
 }

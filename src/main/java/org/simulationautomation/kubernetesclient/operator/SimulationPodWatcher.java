@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.simulation.SimulationService;
+import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,9 @@ import io.fabric8.kubernetes.client.Watcher;
 @Component
 public class SimulationPodWatcher implements Watcher<Pod> {
 
+  static final String POD_PHASE_SUCCEEDED = "Succeeded";
+  static final String POD_PHASE_FAILED = "Failed";
+
   private Logger log = LoggerFactory.getLogger(SimulationPodWatcher.class);
 
   @Autowired
@@ -28,45 +32,68 @@ public class SimulationPodWatcher implements Watcher<Pod> {
   @Override
   public void eventReceived(Watcher.Action action, Pod pod) {
 
-    String podName = pod.getMetadata().getName();
-
     if (alreadyReceivedEvent(pod)) {
       return;
     }
 
+    /*
+     * This Watcher should only care about Pods that have a valid owner and are from Type Simulation
+     */
     OwnerReference ownerReference = getControllerOf(pod);
-
     if (ownerReference == null || !ownerReference.getKind().equalsIgnoreCase(SIMULATION_KIND)) {
-      /*
-       * This Watcher should only care about Pods that have a valid owner and are from Type
-       * Simulation
-       */
       return;
     }
 
-    // TODO do sth with simulation
-    Simulation simulation = getSimulationFromPod(pod);
-
-
     if (action.equals(Action.ADDED)) {
-      log.info("'Add Pod' Event received for Pod with name= " + podName);
+      handleAddAction(pod);
+    } else if (action.equals(Action.MODIFIED)) {
+      handleModifyAction(pod);
+    } else if (action.equals(Action.DELETED)) {
+      handleDeletedAction(pod);
+    }
+
+  }
+
+  private void handleModifyAction(Pod pod) {
+    String podName = pod.getMetadata().getName();
+
+    log.info("'Modify Pod' Event received for Pod with name= " + podName);
+    if (pod.getStatus() == null) {
+      log.error("Pod status for Pod with name= " + podName + "is null!");
+      return;
+    }
+
+    Simulation simulation = getSimulationFromPod(pod);
+    if (simulation == null) {
+      log.error("No simulation found for pod with name=" + podName + ". Cannot update status.");
+    }
+
+
+    log.info("Pod with name " + podName + " is currently in phase " + pod.getStatus().getPhase());
+
+    switch (pod.getStatus().getPhase()) {
+      case POD_PHASE_FAILED:
+        simulationsService.updateStatus(simulation.getMetadata().getName(),
+            SimulationStatusCode.FAILED);
+        break;
+      case POD_PHASE_SUCCEEDED:
+        simulationsService.updateStatus(simulation.getMetadata().getName(),
+            SimulationStatusCode.SUCCEEDED);
+        break;
+      default:
 
     }
 
-    if (action.equals(Action.MODIFIED)) {
 
-      log.info("'Modify Pod' Event received for Pod with name= " + podName);
 
-    }
+  }
 
-    if (action.equals(Action.DELETED)) {
-      log.info("'Delete Pod' Event received for Pod with name= " + podName);
+  private void handleDeletedAction(Pod pod) {
+    log.info("'Delete Pod' Event received for Pod with name= " + pod.getMetadata().getName());
+  }
 
-    }
-
-    if (pod.getSpec() == null) {
-      log.info("No Spec for Pod with name= " + podName);
-    }
+  private void handleAddAction(Pod pod) {
+    log.info("'Add Pod' Event received for Pod with name= " + pod.getMetadata().getName());
   }
 
   /**
@@ -89,18 +116,6 @@ public class SimulationPodWatcher implements Watcher<Pod> {
     return simulation;
   }
 
-  @Override
-  public void onClose(KubernetesClientException cause) {
-
-    log.info("Pod closed with cause = " + cause.toString());
-    // cause != null was due to issue like network connection loss
-    if (cause != null) {
-      cause.printStackTrace();
-      // End pod
-      System.exit(-1);
-    }
-  }
-
   /*
    * Pod has a Simulation Owner
    */
@@ -115,7 +130,7 @@ public class SimulationPodWatcher implements Watcher<Pod> {
   }
 
   /*
-   * Filter event, which were already received. Necessary due to k8s behaviour
+   * Filter event, which were already received. Necessary due to k8s cache events behaviour
    */
   private boolean alreadyReceivedEvent(Pod pod) {
 
@@ -130,5 +145,22 @@ public class SimulationPodWatcher implements Watcher<Pod> {
     }
 
   }
+
+  /**
+   * Close kubernetes operator pod
+   */
+  @Override
+  public void onClose(KubernetesClientException cause) {
+
+    log.info("Pod closed with cause = " + cause.toString());
+    // cause != null was due to issue like network connection loss
+    if (cause != null) {
+      cause.printStackTrace();
+      // End pod
+      System.exit(-1);
+    }
+  }
+
+
 
 }

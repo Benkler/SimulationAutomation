@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationSpec;
+import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.slf4j.Logger;
@@ -42,6 +43,9 @@ public class SimulationCreator {
     // Add to Simulation
     simuCR.setMetadata(metaData);
     simuCR.setSpec(simuSpec);
+
+    SimulationStatus status = new SimulationStatus();
+    status.setStatus(SimulationStatusCode.CREATING);
 
     // TODO set further spec
 

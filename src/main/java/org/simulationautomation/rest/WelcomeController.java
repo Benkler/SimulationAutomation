@@ -1,4 +1,4 @@
-package org.simulationautomation.controller;
+package org.simulationautomation.rest;
 
 import java.util.List;
 import org.simulationautomation.kubernetesclient.crds.Simulation;

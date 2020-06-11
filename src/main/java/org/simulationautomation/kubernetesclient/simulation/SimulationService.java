@@ -1,11 +1,11 @@
 package org.simulationautomation.kubernetesclient.simulation;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
+import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -20,8 +20,7 @@ import org.springframework.stereotype.Component;
 public class SimulationService {
   private Logger log = LoggerFactory.getLogger(SimulationService.class);
   private Map<String, Simulation> simulations = new ConcurrentHashMap<>();
-  // TODO necessary?
-  private Map<String, String> simulationURLs = new HashMap<>();
+
 
   public List<String> getSimulations() {
     log.info("Query all simulations in simulationService");
@@ -44,20 +43,45 @@ public class SimulationService {
     return simulations.get(simulationName);
   }
 
-  public String getSimulationUrl(String simulationName) {
-    return simulationURLs.get(simulationName);
-  }
-
-  // TODO necessary?
-  public void addSimulationUrl(String simulationName, String url) {
-    simulationURLs.put(simulationName, url);
-  }
 
   public Map<String, Simulation> getSimulationsMap() {
     return simulations;
   }
 
-  public Map<String, String> getSimulationsUrls() {
-    return simulationURLs;
+
+
+  public void updateStatus(String simulationName, SimulationStatusCode simulationSatusCode) {
+    Simulation simulation = getSimulation(simulationName);
+    simulation.getStatus().setStatus(simulationSatusCode);
+    simulations.put(simulationName, simulation);
+
+
+    if (simulationSatusCode == SimulationStatusCode.FAILED) {
+      log.info("Update status for Simulation with name=" + simulation.getMetadata().getName()
+          + " .Simulation failed!");
+    }
+
+    if (simulationSatusCode == SimulationStatusCode.SUCCEEDED) {
+      log.info("Update status for Simulation with name=" + simulation.getMetadata().getName()
+          + " .Simulation succeded!");
+    }
+
+    if (simulationSatusCode == SimulationStatusCode.RUNNING) {
+      log.info("Update status for Simulation with name=" + simulation.getMetadata().getName()
+          + " .Simulation is running!");
+    }
+
+    if (simulationSatusCode == SimulationStatusCode.CREATING) {
+      log.info("Update status for Simulation with name=" + simulation.getMetadata().getName()
+          + " .Simulation is created!");
+    }
+
+
   }
+
+  public SimulationStatus getSimulationStatus(String simulationName) {
+    return getSimulation(simulationName).getStatus();
+  }
+
+
 }

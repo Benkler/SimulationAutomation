@@ -35,7 +35,7 @@ public class SimulationSpec implements KubernetesResource {
   @Override
   // TODO adapt
   public String toString() {
-    return "SimulationCRSpec{uuid=" + uuid + "}";
+    return "SimulationSpec{uuid=" + uuid + "}";
   }
 
 
