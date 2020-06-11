@@ -62,6 +62,8 @@ public class WelcomeController {
   @RequestMapping("/create")
   public String createRessource() {
 
+    log.info("Create triggered");
+
     Simulation simulation;
     try {
       simulation = operator.createSimulation();

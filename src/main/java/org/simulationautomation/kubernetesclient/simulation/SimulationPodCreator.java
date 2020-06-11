@@ -68,10 +68,10 @@ public class SimulationPodCreator {
         createVolumeMount(NFS_OUTPUT_NAME, SimulationProperties.PALLADIO_IMAGE_OUTPUT_MOUNT_PATH);
 
     List<String> commands = new ArrayList<>();
-    // commands.add(SimulationProperties.PALLADIO_IMAGE_ENTRY_SCRIPT_PATH);
-    commands.add("/bin/sh"); // TODO remove
-    commands.add("-ec"); // TODO remove
-    commands.add("while :; do echo '.'; sleep 5 ; done"); // TODO remove
+    commands.add(SimulationProperties.PALLADIO_IMAGE_ENTRY_SCRIPT_PATH);
+    // commands.add("/bin/sh"); // TODO remove
+    // commands.add("-ec"); // TODO remove
+    // commands.add("while :; do echo '.'; sleep 5 ; done"); // TODO remove
     //
 
     List<String> args = new ArrayList<>();
