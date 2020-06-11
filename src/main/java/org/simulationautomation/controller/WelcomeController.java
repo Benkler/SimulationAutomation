@@ -1,14 +1,14 @@
 package org.simulationautomation.controller;
 
 import java.util.List;
+import org.simulationautomation.kubernetesclient.crds.Simulation;
+import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 import org.simulationautomation.kubernetesclient.operator.SimulationOperator;
 import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.hp.gagawa.java.elements.Div;
@@ -58,12 +58,19 @@ public class WelcomeController {
     return div.write();
   }
 
-  @PostMapping("/create/{simName}")
-  public String createRessource(@PathVariable String simName) {
+  // @PostMapping("/create/{simName}")
+  @RequestMapping("/create")
+  public String createRessource() {
 
-    operator.createSimulation(simName);
+    Simulation simulation;
+    try {
+      simulation = operator.createSimulation();
+    } catch (SimulationCreationException e) {
+      return "Could not create simulation. Error Message=" + e.getMessage();
+    }
 
-    return "Created simulation with name simName= " + simName;
+
+    return "Created simulation with name simName= " + simulation.getMetadata().getName();
   }
 
   @RequestMapping("/list")

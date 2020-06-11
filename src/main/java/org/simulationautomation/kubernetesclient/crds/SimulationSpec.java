@@ -2,7 +2,6 @@ package org.simulationautomation.kubernetesclient.crds;
 
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 /**
@@ -16,29 +15,28 @@ public class SimulationSpec implements KubernetesResource {
 
   private static final long serialVersionUID = -424650618584495148L;
 
-  private int replicas;
-  private String image;
 
-  public String getImage() {
-    return image;
+  String uuid;
+
+
+
+  public String getUuid() {
+    return uuid;
   }
 
-  public void setImage(String image) {
-    this.image = image;
+
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
   }
 
-  public int getReplicas() {
-    return replicas;
-  }
+
 
   @Override
   // TODO adapt
   public String toString() {
-    return "SimulationCRSpec{replicas=" + replicas + "}";
+    return "SimulationCRSpec{uuid=" + uuid + "}";
   }
 
-  public void setReplicas(int replicas) {
-    this.replicas = replicas;
-  }
 
 }

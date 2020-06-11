@@ -7,6 +7,7 @@ import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.NFSVolumeSource;
@@ -15,6 +16,7 @@ import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 
+@Service
 public class SimulationPodCreator {
   private static final String POD_RESTART_POLICY = "Never";
   private static final String IMAGE_PULL_POLICY = "IfNotPresent";
@@ -24,15 +26,15 @@ public class SimulationPodCreator {
 
   private static final Logger log = LoggerFactory.getLogger(SimulationPodCreator.class);
 
-  public static Pod createSimulationPod(Simulation simulation) {
+  public Pod createSimulationPod(Simulation simulation) {
     String simulationName = simulation.getMetadata().getName();
 
     log.info("Create Pod from Simulation with name= " + simulationName);
 
     Volume inputVolume = createNFSVolumeDefinition(NFS_INPUT_NAME, simulationName,
-        SimulationProperties.NFS_INPUT_FOLDER_NAME);
+        SimulationProperties.SIMULATION_INPUT_FOLDER_NAME);
     Volume outpuVolume = createNFSVolumeDefinition(NFS_OUTPUT_NAME, simulationName,
-        SimulationProperties.NFS_OUTPUT_FOLDER_NAME);
+        SimulationProperties.SIMULATION_OUTPUT_FOLDER_NAME);
 
     Container container = createSimulationContainer(simulation);
 
@@ -55,7 +57,7 @@ public class SimulationPodCreator {
     return pod;
   }
 
-  private static Container createSimulationContainer(Simulation simulation) {
+  private Container createSimulationContainer(Simulation simulation) {
     log.info("Create simulation container for simulation with name= "
         + simulation.getMetadata().getName());
 
@@ -65,16 +67,22 @@ public class SimulationPodCreator {
     VolumeMount outputVolumeMount =
         createVolumeMount(NFS_OUTPUT_NAME, SimulationProperties.PALLADIO_IMAGE_OUTPUT_MOUNT_PATH);
 
+    List<String> commands = new ArrayList<>();
+    // commands.add(SimulationProperties.PALLADIO_IMAGE_ENTRY_SCRIPT_PATH);
+    commands.add("/bin/sh"); // TODO remove
+    commands.add("-ec"); // TODO remove
+    commands.add("while :; do echo '.'; sleep 5 ; done"); // TODO remove
+    //
+
     List<String> args = new ArrayList<>();
     // TODO adapt Folder Structure
     // TODO adapt Simulation Type
+
     args.add("/usr/ExperimentData/model/Experiments/Scalability.experiments");
     args.add("/usr/ExperimentData/model/Experiments/Generated.experiments");
     return new ContainerBuilder().withName(PALLADIO_CONTAINER_NAME)
         .withImage(SimulationProperties.PALLADIO_IMAGE).withImagePullPolicy(IMAGE_PULL_POLICY)
-        .withVolumeMounts(inputVolumeMount, outputVolumeMount)
-        .addAllToCommand(
-            Collections.singletonList(SimulationProperties.PALLADIO_IMAGE_ENTRY_SCRIPT_PATH))
+        .withVolumeMounts(inputVolumeMount, outputVolumeMount).addAllToCommand(commands)
         .addAllToArgs(args).build();
   }
 
@@ -91,8 +99,7 @@ public class SimulationPodCreator {
    * @param folderName
    * @return
    */
-  private static Volume createNFSVolumeDefinition(String nfsName, String simulationId,
-      String folderName) {
+  private Volume createNFSVolumeDefinition(String nfsName, String simulationId, String folderName) {
 
     log.info("Create NFS Volume Definition for simulation with name= " + simulationId);
     NFSVolumeSource nfsVolumeSource = new NFSVolumeSource();
@@ -112,7 +119,7 @@ public class SimulationPodCreator {
    * @param mountPath, where to mount within Container
    * @return
    */
-  private static VolumeMount createVolumeMount(String nfsName, String mountPath) {
+  private VolumeMount createVolumeMount(String nfsName, String mountPath) {
     VolumeMount volumeMount = new VolumeMount();
     volumeMount.setName(nfsName);
     volumeMount.setMountPath(mountPath);

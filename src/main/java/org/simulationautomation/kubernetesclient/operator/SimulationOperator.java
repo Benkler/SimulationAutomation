@@ -7,6 +7,8 @@ import java.util.List;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationDoneable;
 import org.simulationautomation.kubernetesclient.crds.SimulationList;
+import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
+import org.simulationautomation.kubernetesclient.simulation.SimulationCreator;
 import org.simulationautomation.kubernetesclient.simulation.SimulationPodCreator;
 import org.simulationautomation.kubernetesclient.simulation.SimulationService;
 import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
@@ -16,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import io.fabric8.kubernetes.api.builder.Predicate;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -58,6 +59,12 @@ public class SimulationOperator {
   @Autowired
   CustomNamespaceBuilder nsBuilder;
 
+  @Autowired
+  SimulationPodCreator simulationPodCreator;
+
+  @Autowired
+  SimulationCreator simulationCreator;
+
   /**
    * Init all necessary fields, including simulation namespace, simulation resource definition and
    * watcher for simulation resource definitions and simulation pods
@@ -89,18 +96,27 @@ public class SimulationOperator {
    * Create a simulation custom resource with given name in simulation namespace. </br>
    * 
    * @param name
+   * @throws SimulationCreationException
    */
   // TODO further parameters necessary
-  public void createSimulation(String name) {
+  public Simulation createSimulation() throws SimulationCreationException {
 
-    log.info("Trying to create simulation with name=" + name);
-    Simulation simuCr =
-        simulationCRDClient.createOrReplace(createSimulationCR(name, SIMULATION_NAMESPACE));
 
-    simulationsService.addSimulation(simuCr.getMetadata().getName(), simuCr);
 
-    addSimulationPod(simuCr);
-    log.info("Successfully added simulation with name=" + name);
+    Simulation createdSimulation;
+    log.info("Trying to prepare simulation.");
+    createdSimulation = simulationCreator.createAndPrepareSimulation();
+    log.info("Successfully prepared simulation with id=" + createdSimulation.getSpec().getUuid());
+    Simulation persistedSimulation = simulationCRDClient.createOrReplace(createdSimulation);
+    simulationsService.addSimulation(persistedSimulation.getMetadata().getName(),
+        persistedSimulation);
+
+    addSimulationPod(persistedSimulation);
+    log.info(
+        "Successfully added simulation with name=" + persistedSimulation.getMetadata().getName()
+            + "uuid=" + createdSimulation.getSpec().getUuid());
+
+    return persistedSimulation;
 
   }
 
@@ -137,17 +153,7 @@ public class SimulationOperator {
 
   }
 
-  private Simulation createSimulationCR(String name, String nameSpace) {
-    Simulation simuCR = new Simulation();
-    ObjectMeta metaData = new ObjectMeta();
-    metaData.setName(name);
-    metaData.setNamespace(nameSpace);
-    simuCR.setMetadata(metaData);
 
-    // TODO set further spec
-
-    return simuCR;
-  }
 
   /**
    * 
@@ -156,8 +162,8 @@ public class SimulationOperator {
   private void addSimulationPod(Simulation simulation) {
     log.info("Trying to add pod with name=" + simulation.getMetadata().getName() + " in namespace="
         + SIMULATION_NAMESPACE);
-    Pod pod = SimulationPodCreator.createSimulationPod(simulation);
-    client.pods().inNamespace(SIMULATION_NAMESPACE).create(pod);
+    Pod persistedPod = simulationPodCreator.createSimulationPod(simulation);
+    client.pods().inNamespace(SIMULATION_NAMESPACE).create(persistedPod);
 
   }
 

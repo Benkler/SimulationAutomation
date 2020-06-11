@@ -20,11 +20,20 @@ public final class SimulationProperties {
   public static final String SIMULATION_LABEL = "sim";
 
   /*
+   * Properties used to manage folder structure
+   */
+  public static final String SIMULATION_BASE_PATH = "/usr/Simulation";
+  public static final String SIMULATION_INPUT_FOLDER_NAME = "Input";
+  public static final String SIMULATION_OUTPUT_FOLDER_NAME = "Output";
+  // TODO remove as soon as REST API is finished
+  public static final String SIMULATION_EXPERIMENT_FILES_PATH =
+      "/usr/ExperimentFiles/ExperimentData";
+
+  /*
    * Properties used to manage NFS File Structure
    */
-  public static final String NFS_SERVER_IP = "10.152.183.55";
-  public static final String NFS_INPUT_FOLDER_NAME = "Input";
-  public static final String NFS_OUTPUT_FOLDER_NAME = "Output";
+  public static final String NFS_SERVER_IP = "10.100.224.55";
+
 
   /*
    * Properties used for palladio-experimet automation image
