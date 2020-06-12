@@ -1,17 +1,11 @@
 package org.simulationautomation.rest;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 import org.simulationautomation.kubernetesclient.operator.SimulationOperator;
 import org.simulationautomation.kubernetesclient.simulation.SimulationServiceProxy;
-import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
-import org.simulationautomation.util.ZipFolderUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,11 +33,16 @@ public class SimulationRestController {
 
 
   // TODO send experiment data & Post Mapping
+  /**
+   * Rest-Endpoint to trigger simulation with give simulation data.
+   * 
+   * @return
+   * @throws URISyntaxException
+   */
   @GetMapping("/simulation/create")
   public ResponseEntity<String> createSimulation() throws URISyntaxException {
 
     log.info("Rest Endpoint triggered: Create simulation");
-
 
 
     Simulation simulation;
@@ -64,6 +63,17 @@ public class SimulationRestController {
 
   }
 
+  /**
+   * Rest Endpoint that provides information about the current status of a simulation specified by
+   * its unique name. </br>
+   * Error-Response, if Simulation does not exist. </br>
+   * OK-Response, if simulation exists but not yet finished. </br>
+   * Automatic forwarding via @HttpStatus.SEE_OTHER to rest-endpoint, if simulation succeeded.
+   * 
+   * @param simulationName
+   * @return
+   * @throws URISyntaxException
+   */
   @GetMapping("/simulation/status")
   public ResponseEntity<String> getSimulationStatus(
       @RequestParam(name = "simulationName") String simulationName) throws URISyntaxException {
@@ -91,6 +101,7 @@ public class SimulationRestController {
   }
 
 
+
   @RequestMapping(value = "/simulation/results", method = RequestMethod.GET)
   public ResponseEntity<byte[]> getSimulationResults(
       @RequestParam(name = "simulationName") String simulationName) {
@@ -112,17 +123,19 @@ public class SimulationRestController {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
     }
 
+    // Simulation finished
     log.info("Rest Response: Query results for Simulation with name=" + simulationName);
     HttpHeaders headers = new HttpHeaders();
-    // TODO name überarbeiten
+
     headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + simulationName);
     headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
 
 
 
-    byte[] contents = loadZipFile(simulationName);
+    byte[] contents = simulationServiceProxy.getSimulationResults(simulationName);
     if (contents == null) {
-      String response = "Simulation with name=" + simulationName + " encountered while loading zip";
+      String response =
+          "Simulation with name=" + simulationName + " encountered an error while loading zip";
       log.info("Rest Response: " + response);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response.getBytes());
 
@@ -132,41 +145,6 @@ public class SimulationRestController {
     }
 
 
-
-  }
-
-
-  private byte[] loadZipFile(String simulationName) {
-
-    // Create Zip File
-    ZipFolderUtil zipUtil = new ZipFolderUtil();
-    String pathToSimulationResult = SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName
-        + "/" + SimulationProperties.SIMULATION_OUTPUT_FOLDER_NAME;
-    String destinationPath =
-        SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName + "/SimulationResults";
-    String pathToZipFile = zipUtil.zipFolderRecursively(pathToSimulationResult, destinationPath);
-    if (pathToZipFile == null) {
-      log.error("Could not create zip file");
-      return null;
-    }
-
-    // Load Zip File
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-    File zipFile = new File(pathToZipFile);
-    FileInputStream fis;
-
-    try {
-      fis = new FileInputStream(zipFile);
-      org.apache.commons.io.IOUtils.copy(fis, byteArrayOutputStream);
-    } catch (IOException e) {
-      log.error("Error while reading zip file.", e);
-      return null;
-    }
-
-
-
-    return byteArrayOutputStream.toByteArray();
 
   }
 

@@ -13,9 +13,9 @@ import java.util.zip.ZipOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ZipFolderUtil {
+public class ZipUtil {
 
-  private static final Logger log = LoggerFactory.getLogger(ZipFolderUtil.class);
+  private static final Logger log = LoggerFactory.getLogger(ZipUtil.class);
 
 
   /**
@@ -25,7 +25,7 @@ public class ZipFolderUtil {
    * @param directoryPath which has to be zipped
    * @return path to zip file
    */
-  public String zipFolderRecursively(String directoryPath, String destinationPath) {
+  public String createZipFileRecursively(String directoryPath, String destinationPath) {
     // try with resources - creating outputstream and ZipOutputSttream
     try (FileOutputStream fos = new FileOutputStream(destinationPath.concat(".zip"));
         ZipOutputStream zos = new ZipOutputStream(fos)) {
