@@ -106,10 +106,7 @@ public class SimulationPodWatcher implements Watcher<Pod> {
     OwnerReference ownerReference = getControllerOf(pod);
 
     Simulation simulation = simulationsService.getSimulation(ownerReference.getName());
-    if (simulation != null) {
-      log.info("Simulation found for pod with name: " + pod.getMetadata().getName());
-
-    } else {
+    if (simulation == null) {
       log.info("Simulation not found for pod with name: " + pod.getMetadata().getName());
     }
 
