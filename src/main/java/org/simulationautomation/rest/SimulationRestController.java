@@ -14,9 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -53,12 +53,10 @@ public class SimulationRestController {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body("Could not create simulation. Error Message: \n" + e.getMessage());
     }
-
-    log.info(
-        "Rest Response: Simulation accepted with name = " + simulation.getMetadata().getName());
+    String simulationName = simulation.getMetadata().getName();
+    log.info("Rest Response: Simulation accepted with name = " + simulationName);
     HttpHeaders headers = new HttpHeaders();
-    headers.setLocation(
-        new URI("/simulation/status?simulationName=" + simulation.getMetadata().getName()));
+    headers.setLocation(new URI("/simulation/" + simulationName + "/status"));
     return new ResponseEntity<String>(headers, HttpStatus.ACCEPTED);
 
   }
@@ -74,9 +72,9 @@ public class SimulationRestController {
    * @return
    * @throws URISyntaxException
    */
-  @GetMapping("/simulation/status")
+  @GetMapping("/simulation/{simulationName}/status")
   public ResponseEntity<String> getSimulationStatus(
-      @RequestParam(name = "simulationName") String simulationName) throws URISyntaxException {
+      @PathVariable(name = "simulationName") String simulationName) throws URISyntaxException {
 
     log.info("Rest Endpoint triggered: Get status of simulation with name=" + simulationName);
 
@@ -89,7 +87,7 @@ public class SimulationRestController {
     if (simulationServiceProxy.isSimulationFinished(simulationName)) {
       log.info("Rest Response: Simulation with name=" + simulationName + " is finished");
       HttpHeaders headers = new HttpHeaders();
-      headers.setLocation(new URI("/simulation/results?simulationName=" + simulationName));
+      headers.setLocation(new URI("/simulation/" + simulationName + "/results"));
       return new ResponseEntity<String>(headers, HttpStatus.SEE_OTHER);
 
     } else {
@@ -102,9 +100,9 @@ public class SimulationRestController {
 
 
 
-  @RequestMapping(value = "/simulation/results", method = RequestMethod.GET)
+  @RequestMapping(value = "/simulation/{simulationName}/results", method = RequestMethod.GET)
   public ResponseEntity<byte[]> getSimulationResults(
-      @RequestParam(name = "simulationName") String simulationName) {
+      @PathVariable(name = "simulationName") String simulationName) {
 
     log.info(
         "Rest Endpoint triggered: Get simulation result of simulation with name=" + simulationName);
@@ -133,6 +131,7 @@ public class SimulationRestController {
 
 
     byte[] contents = simulationServiceProxy.getSimulationResults(simulationName);
+    // TODO delete zip File
     if (contents == null) {
       String response =
           "Simulation with name=" + simulationName + " encountered an error while loading zip";
@@ -147,6 +146,8 @@ public class SimulationRestController {
 
 
   }
+
+  // TODO Endpunkt für Datei
 
 
 
