@@ -18,6 +18,7 @@ public class SimulationLogService implements ISimulationLogService {
   @Autowired
   ISimulationOperator simulationOperator;
 
+
   /**
    * Get logs for pod with specified name.
    * 
@@ -25,7 +26,6 @@ public class SimulationLogService implements ISimulationLogService {
    * @param namespace
    * @return
    */
-
   @Override
   public String getLogs(String simulationName) throws PodNotFoundException {
 
