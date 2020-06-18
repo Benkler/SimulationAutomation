@@ -10,7 +10,7 @@ import org.simulationautomation.kubernetesclient.api.ISimulationFactory;
 import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodFactory;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodWatcher;
-import org.simulationautomation.kubernetesclient.api.ISimulationService;
+import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.api.ISimulationWatcher;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationDoneable;
@@ -48,7 +48,7 @@ public class SimulationOperator implements ISimulationOperator {
   private KubernetesClient client;
 
   @Autowired
-  private ISimulationService simulationsService;
+  private ISimulationServiceRegistry simulationsServiceRegistry;
 
   @Autowired
   private ISimulationWatcher simulationWatcher;
@@ -81,7 +81,10 @@ public class SimulationOperator implements ISimulationOperator {
         Simulation.class, SimulationList.class, SimulationDoneable.class, SIMULATION_NAMESPACE);
     // Delete simulations in namespace
     deleteExistingSimulationsResources();
-    registerSimulationWatchers();
+
+    // Register watcher for both, simulations (crds) and pods in namespace simulation
+    registerSimulationWatcher();
+    registerSimulationPodWatcher();
 
   }
 
@@ -106,37 +109,64 @@ public class SimulationOperator implements ISimulationOperator {
   // TODO further parameters necessary
   @Override
   public Simulation createSimulation() throws SimulationCreationException {
-
-
-
-    Simulation createdSimulation;
     log.info("Trying to prepare simulation.");
-    createdSimulation = simulationFactory.createAndPrepareSimulation();
-    log.info(
-        "Successfully prepared simulation with id=" + createdSimulation.getMetadata().getName());
-    Simulation persistedSimulation = simulationCRDClient.createOrReplace(createdSimulation);
-    simulationsService.addSimulation(persistedSimulation.getMetadata().getName(),
-        persistedSimulation);
 
-    addSimulationPod(persistedSimulation);
+    // Create Simulation and prepare local folder structure
+    Simulation createdSimulation = simulationFactory.createAndPrepareSimulation();
+    String simulationName = createdSimulation.getMetadata().getName();
+    log.info("Successfully prepared simulation with id=" + simulationName);
+
+    // Add simulation to k8s cluster
+    Simulation persistedSimulation = simulationCRDClient.createOrReplace(createdSimulation);
     log.info("Successfully persisted simulation: " + persistedSimulation);
 
+    if (persistedSimulation == null) {
+      log.error("Error while creating simulation with name=" + simulationName);
+      throw new SimulationCreationException(
+          "Error while creating simulation with name=" + simulationName);
+    }
 
-    simulationsService.updateStatus(persistedSimulation.getMetadata().getName(),
+    // Add simulation to local service registry
+    simulationsServiceRegistry.addSimulation(persistedSimulation.getMetadata().getName(),
+        persistedSimulation);
+
+    // Create simulation pod for specified simulation
+    Pod simulationPod = createAndPersistSimulationPod(persistedSimulation);
+
+    if (simulationPod == null) {
+      deleteExistingSimulation(persistedSimulation);
+      throw new SimulationCreationException("Could not create simulation with name="
+          + persistedSimulation.getMetadata().getName() + ", as no Pod could be instantiated");
+    }
+
+    registerSimulationPodLogWatcher(simulationPod);
+
+
+    simulationsServiceRegistry.updateStatus(persistedSimulation.getMetadata().getName(),
         SimulationStatusCode.RUNNING);
 
     return persistedSimulation;
 
   }
 
-  private CustomResourceDefinition createAndRegisterSimulationCRD() {
+  private void registerSimulationPodLogWatcher(Pod simulationPod) {
+    String podName = simulationPod.getMetadata().getName();
+    // client.pods().inNamespace(SimulationProperties.SIMULATION_NAMESPACE).withName(podName).ge
+  }
 
-    CustomResourceDefinition simuCRD = SimulationCRDUtil.getCRD();
-    k8SCoreRuntime.registerCustomResourceDefinition(simuCRD);
-    k8SCoreRuntime.registerCustomKind(SIMULATION_GROUP + "/v1", SIMULATION_KIND, Simulation.class);
+  /**
+   * Try to create simulation
+   * 
+   * @param simulation
+   * @throws SimulationCreationException
+   */
+  private Pod createAndPersistSimulationPod(Simulation simulation)
+      throws SimulationCreationException {
+    log.info("Trying to add pod for simulation with name=" + simulation.getMetadata().getName()
+        + " in namespace=" + SIMULATION_NAMESPACE);
+    Pod createdPod = simulationPodFactory.createSimulationPod(simulation);
+    return client.pods().inNamespace(SIMULATION_NAMESPACE).create(createdPod);
 
-    log.info("SimulationCRD successfully registered");
-    return simuCRD;
   }
 
   /*
@@ -150,29 +180,36 @@ public class SimulationOperator implements ISimulationOperator {
 
   }
 
-  /*
-   * Register Simulation Watch - This watcher is in charge of SimulationCRs and its Pods
-   */
-  private void registerSimulationWatchers() {
-    log.info("Registering CRD Watch");
-    simulationCRDClient.watch(simulationWatcher);
-
-    log.info("Registering Pod Watch");
-    client.pods().inNamespace(SIMULATION_NAMESPACE).watch(simulationPodWatcher);
-
+  private void deleteExistingSimulation(Simulation simulation) {
+    log.info("Delete simulation with name=" + simulation.getMetadata().getName());
+    simulationCRDClient.delete(simulation);
   }
 
+  private CustomResourceDefinition createAndRegisterSimulationCRD() {
 
+    CustomResourceDefinition simuCRD = SimulationCRDUtil.getCRD();
+    k8SCoreRuntime.registerCustomResourceDefinition(simuCRD);
+    k8SCoreRuntime.registerCustomKind(SIMULATION_GROUP + "/v1", SIMULATION_KIND, Simulation.class);
 
-  /**
-   * 
-   * @param simulation
+    log.info("SimulationCRD successfully registered");
+    return simuCRD;
+  }
+
+  /*
+   * Register Pod Watcher in namespace "simulation".
    */
-  private void addSimulationPod(Simulation simulation) {
-    log.info("Trying to add pod with name=" + simulation.getMetadata().getName() + " in namespace="
-        + SIMULATION_NAMESPACE);
-    Pod persistedPod = simulationPodFactory.createSimulationPod(simulation);
-    client.pods().inNamespace(SIMULATION_NAMESPACE).create(persistedPod);
+  private void registerSimulationPodWatcher() {
+    log.info("Registering Pod Watcher");
+    client.pods().inNamespace(SIMULATION_NAMESPACE).watch(simulationPodWatcher);
+  }
+
+  /*
+   * Register Simulation Watcher
+   */
+  private void registerSimulationWatcher() {
+    log.info("Registering Simulation Watcher");
+    simulationCRDClient.watch(simulationWatcher);
+
 
   }
 

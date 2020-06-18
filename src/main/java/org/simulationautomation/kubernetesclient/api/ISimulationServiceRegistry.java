@@ -7,7 +7,7 @@ import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
 
 
-public interface ISimulationService {
+public interface ISimulationServiceRegistry {
 
   /**
    * Query all simulations currently stored in this service

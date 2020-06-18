@@ -71,15 +71,11 @@ public class SimulationPodFactory implements ISimulationPodFactory {
 
     List<String> commands = new ArrayList<>();
     commands.add(SimulationProperties.PALLADIO_IMAGE_ENTRY_SCRIPT_PATH);
-    // commands.add("/bin/sh"); // TODO remove
-    // commands.add("-ec"); // TODO remove
-    // commands.add("while :; do echo '.'; sleep 5 ; done"); // TODO remove
-    //
 
     List<String> args = new ArrayList<>();
+
     // TODO adapt Folder Structure
     // TODO adapt Simulation Type
-
     args.add("/usr/ExperimentData/model/Experiments/Scalability.experiments");
     args.add("/usr/ExperimentData/model/Experiments/Generated.experiments");
     return new ContainerBuilder().withName(PALLADIO_CONTAINER_NAME)

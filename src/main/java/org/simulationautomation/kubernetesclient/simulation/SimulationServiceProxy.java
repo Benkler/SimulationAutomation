@@ -6,7 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import org.simulationautomation.kubernetesclient.api.ISimulationService;
+import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.simulationautomation.util.ZipUtil;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 public class SimulationServiceProxy {
 
   @Autowired
-  ISimulationService simulationService;
+  ISimulationServiceRegistry simulationService;
 
   private static final Logger log = LoggerFactory.getLogger(SimulationServiceProxy.class);
 

@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodWatcher;
-import org.simulationautomation.kubernetesclient.api.ISimulationService;
+import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
   private Logger log = LoggerFactory.getLogger(SimulationPodWatcher.class);
 
   @Autowired
-  private ISimulationService simulationsService;
+  private ISimulationServiceRegistry simulationsService;
 
   private Set<String> resourceVersions = new HashSet<>();
 
