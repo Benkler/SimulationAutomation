@@ -26,7 +26,7 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
   private Logger log = LoggerFactory.getLogger(SimulationPodWatcher.class);
 
   @Autowired
-  private ISimulationServiceRegistry simulationsService;
+  private ISimulationServiceRegistry simulationsServiceRegistry;
 
   private Set<String> resourceVersions = new HashSet<>();
 
@@ -74,11 +74,11 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
 
     switch (pod.getStatus().getPhase()) {
       case POD_PHASE_FAILED:
-        simulationsService.updateStatus(simulation.getMetadata().getName(),
+        simulationsServiceRegistry.updateStatus(simulation.getMetadata().getName(),
             SimulationStatusCode.FAILED);
         break;
       case POD_PHASE_SUCCEEDED:
-        simulationsService.updateStatus(simulation.getMetadata().getName(),
+        simulationsServiceRegistry.updateStatus(simulation.getMetadata().getName(),
             SimulationStatusCode.SUCCEEDED);
         break;
       default:
@@ -97,16 +97,14 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
     log.info("'Add Pod' Event received for Pod with name= " + pod.getMetadata().getName());
   }
 
-  /**
+  /*
    * Get accompanying Simulation for given Pod from @SimulationService
    * 
-   * @param pod
-   * @return
    */
   private Simulation getSimulationFromPod(Pod pod) {
     OwnerReference ownerReference = getControllerOf(pod);
 
-    Simulation simulation = simulationsService.getSimulation(ownerReference.getName());
+    Simulation simulation = simulationsServiceRegistry.getSimulation(ownerReference.getName());
     if (simulation == null) {
       log.info("Simulation not found for pod with name: " + pod.getMetadata().getName());
     }
@@ -120,7 +118,7 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
   private OwnerReference getControllerOf(Pod pod) {
     List<OwnerReference> ownerReferences = pod.getMetadata().getOwnerReferences();
     for (OwnerReference ownerReference : ownerReferences) {
-      if (ownerReference.getController().equals(Boolean.TRUE)) {
+      if (ownerReference.getController()) {
         return ownerReference;
       }
     }

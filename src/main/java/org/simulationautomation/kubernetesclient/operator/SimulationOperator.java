@@ -17,11 +17,13 @@ import org.simulationautomation.kubernetesclient.crds.SimulationDoneable;
 import org.simulationautomation.kubernetesclient.crds.SimulationList;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
+import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.simulationautomation.kubernetesclient.util.SimulationCRDUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -98,6 +100,26 @@ public class SimulationOperator implements ISimulationOperator {
   @Override
   public List<Simulation> listExistingSimulations() {
     return simulationCRDClient.list().getItems();
+  }
+
+  @Override
+  public Pod getPodBySimulationName(String simulationName) {
+
+    List<Pod> podList =
+        client.pods().inNamespace(SimulationProperties.SIMULATION_NAMESPACE).list().getItems();
+
+    for (Pod pod : podList) {
+      OwnerReference or = getControllerOfPod(pod);
+      if (or == null) {
+        continue;
+      }
+
+      if (simulationName.equals(or.getName())) {
+        return pod;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -211,6 +233,19 @@ public class SimulationOperator implements ISimulationOperator {
     simulationCRDClient.watch(simulationWatcher);
 
 
+  }
+
+  /*
+   * Pod has a Simulation Owner
+   */
+  private OwnerReference getControllerOfPod(Pod pod) {
+    List<OwnerReference> ownerReferences = pod.getMetadata().getOwnerReferences();
+    for (OwnerReference ownerReference : ownerReferences) {
+      if (ownerReference.getController()) {
+        return ownerReference;
+      }
+    }
+    return null;
   }
 
 

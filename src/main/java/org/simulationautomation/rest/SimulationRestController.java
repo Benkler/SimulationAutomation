@@ -3,9 +3,9 @@ package org.simulationautomation.rest;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
+import org.simulationautomation.kubernetesclient.api.ISimulationServiceProxy;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
-import org.simulationautomation.kubernetesclient.simulation.SimulationServiceProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ public class SimulationRestController {
   ISimulationOperator operator;
 
   @Autowired
-  SimulationServiceProxy simulationServiceProxy;
+  ISimulationServiceProxy simulationServiceProxy;
 
 
   // TODO send experiment data & Post Mapping
@@ -146,6 +146,31 @@ public class SimulationRestController {
 
 
   }
+
+
+  @RequestMapping(value = "/simulation/{simulationName}/log", method = RequestMethod.GET)
+  public ResponseEntity<byte[]> getSimulationLog(
+      @PathVariable(name = "simulationName") String simulationName) {
+
+    log.info(
+        "Rest Endpoint triggered: Get simulation result of simulation with name=" + simulationName);
+
+    // Check if simulation exists
+    if (!simulationServiceProxy.doesSimulationExist(simulationName)) {
+      String response = "Simulation with name=" + simulationName + " does not exist";
+      log.info("Rest Response: " + response);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
+    }
+
+
+
+    // TODO return logs
+    return null;
+
+
+  }
+
+
 
   // TODO Endpunkt für Datei
 

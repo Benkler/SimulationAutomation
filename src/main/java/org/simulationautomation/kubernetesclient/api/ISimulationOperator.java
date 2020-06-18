@@ -3,6 +3,7 @@ package org.simulationautomation.kubernetesclient.api;
 import java.util.List;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
+import io.fabric8.kubernetes.api.model.Pod;
 
 
 public interface ISimulationOperator {
@@ -30,5 +31,13 @@ public interface ISimulationOperator {
    */
   // TODO further parameters necessary
   Simulation createSimulation() throws SimulationCreationException;
+
+  /**
+   * Find Pod for Simulation with given name. </br>
+   * 
+   * @param simulationName
+   * @return Pod OR null if not present
+   */
+  Pod getPodBySimulationName(String simulationName);
 
 }

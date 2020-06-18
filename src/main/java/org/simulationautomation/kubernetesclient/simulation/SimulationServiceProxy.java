@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import org.simulationautomation.kubernetesclient.api.ISimulationServiceProxy;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
@@ -15,15 +16,31 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service class as Proxy between REST-interface and actual backend
+ * 
+ * @author Niko Benkler
+ *
+ */
 @Service
-public class SimulationServiceProxy {
+public class SimulationServiceProxy implements ISimulationServiceProxy {
 
   @Autowired
   ISimulationServiceRegistry simulationService;
 
+  @Autowired
+  ISimulationLogService simulationLogService;
+
   private static final Logger log = LoggerFactory.getLogger(SimulationServiceProxy.class);
 
 
+  @Override
+  public String getSimulationLog(String simulationName) {
+
+    return "";
+  }
+
+  @Override
   public boolean isSimulationFinished(String simulationName) {
 
     SimulationStatus status = simulationService.getSimulationStatus(simulationName);
@@ -33,6 +50,7 @@ public class SimulationServiceProxy {
   }
 
 
+  @Override
   public boolean doesSimulationExist(String simulationName) {
     return simulationService.getSimulation(simulationName) != null;
   }
@@ -43,6 +61,7 @@ public class SimulationServiceProxy {
    * @param simulationName
    * @return
    */
+  @Override
   public byte[] getSimulationResults(String simulationName) {
 
     log.info("Get simulation results for simulation with name=" + simulationName);
@@ -93,14 +112,22 @@ public class SimulationServiceProxy {
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
     File zipFile = new File(path);
-    FileInputStream fis;
+    FileInputStream fis = null;
 
     try {
       fis = new FileInputStream(zipFile);
       org.apache.commons.io.IOUtils.copy(fis, byteArrayOutputStream);
     } catch (IOException e) {
+
       log.error("Error while reading file.", e);
       return null;
+    } finally {
+      try {
+        // Need to close this as it is a fileInputStream
+        fis.close();
+      } catch (IOException e) {
+
+      }
     }
 
 
