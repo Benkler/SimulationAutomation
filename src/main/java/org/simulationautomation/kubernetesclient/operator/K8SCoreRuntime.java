@@ -1,5 +1,6 @@
 package org.simulationautomation.kubernetesclient.operator;
 
+import org.simulationautomation.kubernetesclient.api.IK8SCoreRuntime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ import io.fabric8.kubernetes.internal.KubernetesDeserializer;
  *
  */
 @Service
-public class K8SCoreRuntime {
+public class K8SCoreRuntime implements IK8SCoreRuntime {
 
   private Logger log = LoggerFactory.getLogger(K8SCoreRuntime.class);
 
@@ -38,6 +39,7 @@ public class K8SCoreRuntime {
    * @param kind
    * @param clazz
    */
+  @Override
   public void registerCustomKind(String apiVersion, String kind,
       Class<? extends KubernetesResource> clazz) {
     KubernetesDeserializer.registerCustomKind(apiVersion, kind, clazz);
@@ -49,6 +51,7 @@ public class K8SCoreRuntime {
    * 
    * @return
    */
+  @Override
   public CustomResourceDefinitionList getCustomResourceDefinitionList() {
     return kubernetesClient.customResourceDefinitions().list();
   }
@@ -66,6 +69,7 @@ public class K8SCoreRuntime {
    * @param doneClass
    * @return
    */
+  @Override
   public <T extends HasMetadata, L extends KubernetesResourceList<?>, D extends Doneable<T>> MixedOperation<T, L, D, Resource<T, D>> customResourcesClient(
       CustomResourceDefinition crd, Class<T> resourceType, Class<L> listClass, Class<D> doneClass) {
     return kubernetesClient.customResources(crd, resourceType, listClass, doneClass);
@@ -85,6 +89,7 @@ public class K8SCoreRuntime {
    * @param namespace
    * @return
    */
+  @Override
   public <T extends HasMetadata, L extends KubernetesResourceList<?>, D extends Doneable<T>> NonNamespaceOperation<T, L, D, Resource<T, D>> customResourcesClientInNameSpace(
       CustomResourceDefinition crd, Class<T> resourceType, Class<L> listClass, Class<D> doneClass,
       String namespace) {
@@ -97,6 +102,7 @@ public class K8SCoreRuntime {
    * 
    * @param crd
    */
+  @Override
   public void registerCustomResourceDefinition(CustomResourceDefinition crd) {
     // Apply CRD object onto your Kubernetes cluster
     kubernetesClient.customResourceDefinitions().createOrReplace(crd);

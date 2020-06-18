@@ -1,5 +1,6 @@
 package org.simulationautomation.kubernetesclient.operator;
 
+import org.simulationautomation.kubernetesclient.api.ISimulationWatcher;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,7 +9,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
 
 @Component
-public class SimulationWatcher implements Watcher<Simulation> {
+public class SimulationWatcher implements ISimulationWatcher {
 
   private Logger log = LoggerFactory.getLogger(SimulationWatcher.class);
 

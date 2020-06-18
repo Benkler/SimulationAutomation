@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import org.simulationautomation.kubernetesclient.api.ISimulationService;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.slf4j.Logger;
@@ -17,39 +18,56 @@ import org.springframework.stereotype.Component;
  *
  */
 @Component(value = "simulationService")
-public class SimulationService {
+public class SimulationService implements ISimulationService {
   private Logger log = LoggerFactory.getLogger(SimulationService.class);
   private Map<String, Simulation> simulations = new ConcurrentHashMap<>();
 
 
+  /**
+   * Query all simulations currently stored in this service
+   * 
+   * @return
+   */
+  @Override
   public List<String> getSimulations() {
     log.info("Query all simulations in simulationService");
     return simulations.values().stream().map(a -> a.getMetadata().getName())
         .collect(Collectors.toList());
   }
 
+
+  @Override
   public void addSimulation(String simulationName, Simulation simulation) {
     log.info("Add simulation to simulation service: " + simulation);
     simulations.put(simulationName, simulation);
 
   }
 
+  @Override
   public Simulation removeSimulation(String simulationName) {
     log.info("Remove simulation from simulationService with name= " + simulationName);
     return simulations.remove(simulationName);
   }
 
+  @Override
   public Simulation getSimulation(String simulationName) {
     return simulations.get(simulationName);
   }
 
 
+  @Override
   public Map<String, Simulation> getSimulationsMap() {
     return simulations;
   }
 
 
-
+  /**
+   * Update given simulation status for simulation with given name
+   * 
+   * @param simulationName
+   * @param simulationSatusCode
+   */
+  @Override
   public void updateStatus(String simulationName, SimulationStatusCode simulationSatusCode) {
     Simulation simulation = getSimulation(simulationName);
 
@@ -86,6 +104,7 @@ public class SimulationService {
 
   }
 
+  @Override
   public SimulationStatus getSimulationStatus(String simulatioUUID) {
     return getSimulation(simulatioUUID).getStatus();
   }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 import org.apache.commons.io.FileUtils;
+import org.simulationautomation.kubernetesclient.api.ISimulationFactory;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationSpec;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
@@ -15,25 +16,26 @@ import org.springframework.stereotype.Service;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 @Service
-public class SimulationCreator {
+public class SimulationFactory implements ISimulationFactory {
 
 
-  private Logger log = LoggerFactory.getLogger(SimulationCreator.class);
+  private Logger log = LoggerFactory.getLogger(SimulationFactory.class);
 
 
+  @Override
   public Simulation createAndPrepareSimulation() throws SimulationCreationException {
 
     // Prepare folder structure and provide input which will be mounted into simulation pod
-    String customUuid = generateCustomUUID();
-    prepareFolderStructure(customUuid);
-    prepareInput(customUuid);
+    String simulationName = generateCustomUUID();
+    prepareFolderStructure(simulationName);
+    prepareInput(simulationName);
 
 
     Simulation simuCR = new Simulation();
 
     // Generate Metadata
     ObjectMeta metaData = new ObjectMeta();
-    metaData.setName(customUuid);
+    metaData.setName(simulationName);
     metaData.setNamespace(SimulationProperties.SIMULATION_NAMESPACE);
 
     // Generate Spec
@@ -117,7 +119,6 @@ public class SimulationCreator {
    * 
    */
   private String generateCustomUUID() {
-    // TODO stimmt das
     return "simulation-" + UUID.randomUUID().toString().replace("-", "");
 
   }

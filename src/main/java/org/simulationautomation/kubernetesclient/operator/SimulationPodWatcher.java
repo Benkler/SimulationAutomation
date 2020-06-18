@@ -4,8 +4,9 @@ import static org.simulationautomation.kubernetesclient.simulation.properties.Si
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.simulationautomation.kubernetesclient.api.ISimulationPodWatcher;
+import org.simulationautomation.kubernetesclient.api.ISimulationService;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
-import org.simulationautomation.kubernetesclient.simulation.SimulationService;
 import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
 
 @Component
-public class SimulationPodWatcher implements Watcher<Pod> {
+public class SimulationPodWatcher implements ISimulationPodWatcher {
 
   static final String POD_PHASE_SUCCEEDED = "Succeeded";
   static final String POD_PHASE_FAILED = "Failed";
@@ -25,7 +26,7 @@ public class SimulationPodWatcher implements Watcher<Pod> {
   private Logger log = LoggerFactory.getLogger(SimulationPodWatcher.class);
 
   @Autowired
-  private SimulationService simulationsService;
+  private ISimulationService simulationsService;
 
   private Set<String> resourceVersions = new HashSet<>();
 

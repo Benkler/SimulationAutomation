@@ -2,9 +2,9 @@ package org.simulationautomation.rest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
-import org.simulationautomation.kubernetesclient.operator.SimulationOperator;
 import org.simulationautomation.kubernetesclient.simulation.SimulationServiceProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ public class SimulationRestController {
   private static final Logger log = LoggerFactory.getLogger(SimulationRestController.class);
 
   @Autowired
-  SimulationOperator operator;
+  ISimulationOperator operator;
 
   @Autowired
   SimulationServiceProxy simulationServiceProxy;

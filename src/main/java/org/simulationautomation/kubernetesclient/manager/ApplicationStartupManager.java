@@ -1,8 +1,7 @@
 package org.simulationautomation.kubernetesclient.manager;
 
 import static org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties.SIMULATION_NAMESPACE;
-
-import org.simulationautomation.kubernetesclient.operator.SimulationOperator;
+import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +18,7 @@ public class ApplicationStartupManager implements ApplicationListener<Applicatio
   private static final Logger log = LoggerFactory.getLogger(ApplicationStartupManager.class);
 
   @Autowired
-  SimulationOperator simulationOperator;
+  ISimulationOperator simulationOperator;
 
   @Autowired
   KubernetesClient client;

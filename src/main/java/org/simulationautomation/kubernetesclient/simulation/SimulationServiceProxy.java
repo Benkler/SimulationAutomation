@@ -4,9 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import org.simulationautomation.kubernetesclient.api.ISimulationService;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
-import org.simulationautomation.rest.SimulationRestController;
 import org.simulationautomation.util.ZipUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +19,9 @@ import org.springframework.stereotype.Service;
 public class SimulationServiceProxy {
 
   @Autowired
-  SimulationService simulationService;
+  ISimulationService simulationService;
 
-  private static final Logger log = LoggerFactory.getLogger(SimulationRestController.class);
+  private static final Logger log = LoggerFactory.getLogger(SimulationServiceProxy.class);
 
 
   public boolean isSimulationFinished(String simulationName) {
@@ -59,25 +61,45 @@ public class SimulationServiceProxy {
       return null;
     }
 
-    return loadZipFile(zipPath);
+    byte[] zipAsByteStream = loadFileAsByteStream(zipPath);
+    deleteFile(zipPath);
+
+    return zipAsByteStream;
+  }
+
+  /*
+   * Delete file at specified path
+   */
+  private void deleteFile(String path) {
+    log.info("Trying to delete file at path=" + path);
+
+    try {
+      Files.deleteIfExists(Paths.get(path));
+      log.info("Successfully delete file");
+    } catch (IOException e) {
+      log.info("No such file!");
+    }
+
   }
 
 
-  private byte[] loadZipFile(String zipPath) {
+  /*
+   * Load file into byte Array
+   */
+  private byte[] loadFileAsByteStream(String path) {
 
-    log.info("Load zip file at path=" + zipPath);
+    log.info("Load file at path=" + path);
 
-    // Load Zip File
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-    File zipFile = new File(zipPath);
+    File zipFile = new File(path);
     FileInputStream fis;
 
     try {
       fis = new FileInputStream(zipFile);
       org.apache.commons.io.IOUtils.copy(fis, byteArrayOutputStream);
     } catch (IOException e) {
-      log.error("Error while reading zip file.", e);
+      log.error("Error while reading file.", e);
       return null;
     }
 

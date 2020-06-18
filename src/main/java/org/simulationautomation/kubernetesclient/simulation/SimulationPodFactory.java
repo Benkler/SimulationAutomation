@@ -3,6 +3,7 @@ package org.simulationautomation.kubernetesclient.simulation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.simulationautomation.kubernetesclient.api.ISimulationPodFactory;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.slf4j.Logger;
@@ -17,15 +18,16 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 
 @Service
-public class SimulationPodCreator {
+public class SimulationPodFactory implements ISimulationPodFactory {
   private static final String POD_RESTART_POLICY = "Never";
   private static final String IMAGE_PULL_POLICY = "IfNotPresent";
   private static final String NFS_INPUT_NAME = "input-nfs";
   private static final String NFS_OUTPUT_NAME = "output-nfs";
   private static final String PALLADIO_CONTAINER_NAME = "palladiosimulation";
 
-  private static final Logger log = LoggerFactory.getLogger(SimulationPodCreator.class);
+  private static final Logger log = LoggerFactory.getLogger(SimulationPodFactory.class);
 
+  @Override
   public Pod createSimulationPod(Simulation simulation) {
     String simulationName = simulation.getMetadata().getName();
 

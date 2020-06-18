@@ -4,15 +4,19 @@ import static org.simulationautomation.kubernetesclient.simulation.properties.Si
 import static org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties.SIMULATION_KIND;
 import static org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties.SIMULATION_NAMESPACE;
 import java.util.List;
+import org.simulationautomation.kubernetesclient.api.ICustomNameSpaceBuilder;
+import org.simulationautomation.kubernetesclient.api.IK8SCoreRuntime;
+import org.simulationautomation.kubernetesclient.api.ISimulationFactory;
+import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
+import org.simulationautomation.kubernetesclient.api.ISimulationPodFactory;
+import org.simulationautomation.kubernetesclient.api.ISimulationPodWatcher;
+import org.simulationautomation.kubernetesclient.api.ISimulationService;
+import org.simulationautomation.kubernetesclient.api.ISimulationWatcher;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationDoneable;
 import org.simulationautomation.kubernetesclient.crds.SimulationList;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
-import org.simulationautomation.kubernetesclient.simulation.SimulationCreator;
-import org.simulationautomation.kubernetesclient.simulation.SimulationPodCreator;
-import org.simulationautomation.kubernetesclient.simulation.SimulationService;
 import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
-import org.simulationautomation.kubernetesclient.util.CustomNamespaceBuilder;
 import org.simulationautomation.kubernetesclient.util.SimulationCRDUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +29,7 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
 @Component
-public class SimulationOperator {
+public class SimulationOperator implements ISimulationOperator {
 
   static final String IMAGE_PULL_POLICY = "IfNotPresent";
   static final String POD_RESTART_POLICY = "Never";
@@ -44,30 +48,31 @@ public class SimulationOperator {
   private KubernetesClient client;
 
   @Autowired
-  private SimulationService simulationsService;
+  private ISimulationService simulationsService;
 
   @Autowired
-  private SimulationWatcher simulationWatcher;
+  private ISimulationWatcher simulationWatcher;
 
   @Autowired
-  private SimulationPodWatcher simulationPodWatcher;
+  private ISimulationPodWatcher simulationPodWatcher;
 
   @Autowired
-  private K8SCoreRuntime k8SCoreRuntime;
+  private IK8SCoreRuntime k8SCoreRuntime;
 
   @Autowired
-  CustomNamespaceBuilder nsBuilder;
+  ICustomNameSpaceBuilder nsBuilder;
 
   @Autowired
-  SimulationPodCreator simulationPodCreator;
+  ISimulationPodFactory simulationPodFactory;
 
   @Autowired
-  SimulationCreator simulationCreator;
+  ISimulationFactory simulationFactory;
 
   /**
    * Init all necessary fields, including simulation namespace, simulation resource definition and
    * watcher for simulation resource definitions and simulation pods
    */
+  @Override
   public void init() {
     nsBuilder.createNamespace(SIMULATION_NAMESPACE);
     simulationCRD = createAndRegisterSimulationCRD();
@@ -87,6 +92,7 @@ public class SimulationOperator {
    * @return
    * @return
    */
+  @Override
   public List<Simulation> listExistingSimulations() {
     return simulationCRDClient.list().getItems();
   }
@@ -98,13 +104,14 @@ public class SimulationOperator {
    * @throws SimulationCreationException
    */
   // TODO further parameters necessary
+  @Override
   public Simulation createSimulation() throws SimulationCreationException {
 
 
 
     Simulation createdSimulation;
     log.info("Trying to prepare simulation.");
-    createdSimulation = simulationCreator.createAndPrepareSimulation();
+    createdSimulation = simulationFactory.createAndPrepareSimulation();
     log.info(
         "Successfully prepared simulation with id=" + createdSimulation.getMetadata().getName());
     Simulation persistedSimulation = simulationCRDClient.createOrReplace(createdSimulation);
@@ -164,7 +171,7 @@ public class SimulationOperator {
   private void addSimulationPod(Simulation simulation) {
     log.info("Trying to add pod with name=" + simulation.getMetadata().getName() + " in namespace="
         + SIMULATION_NAMESPACE);
-    Pod persistedPod = simulationPodCreator.createSimulationPod(simulation);
+    Pod persistedPod = simulationPodFactory.createSimulationPod(simulation);
     client.pods().inNamespace(SIMULATION_NAMESPACE).create(persistedPod);
 
   }
