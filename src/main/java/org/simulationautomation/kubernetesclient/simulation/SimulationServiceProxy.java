@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceProxy;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
+import org.simulationautomation.kubernetesclient.simulation.properties.SimulationPathFactory;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.simulationautomation.util.ZipUtil;
 import org.slf4j.Logger;
@@ -38,9 +39,7 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
   public byte[] getSimulationLog(String simulationName) {
 
     log.info("Trying to get log for simulation with name=" + simulationName);
-    String pathToLogFile = SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName + "/"
-        + SimulationProperties.SIMULATION_LOG_FILE_NAME;
-
+    String pathToLogFile = SimulationPathFactory.getPathToSimulationLogFile(simulationName);
 
     byte[] log = loadFileAsByteStream(pathToLogFile);
 
@@ -77,9 +76,8 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
   public byte[] getSimulationResults(String simulationName) {
 
     log.info("Get simulation results for simulation with name=" + simulationName);
-    String pathToOutputFolder = SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName
-        + "/" + SimulationProperties.SIMULATION_OUTPUT_FOLDER_NAME;
-
+    String pathToOutputFolder =
+        SimulationPathFactory.getPathToOutputFolderOfSimulation(simulationName);
     // Path and name for zip file -> SimulationResults.zip
     String destinationPath =
         SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName + "/SimulationResults";

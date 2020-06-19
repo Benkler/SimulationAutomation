@@ -9,6 +9,7 @@ import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationSpec;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
+import org.simulationautomation.kubernetesclient.simulation.properties.SimulationPathFactory;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,6 @@ public class SimulationFactory implements ISimulationFactory {
 
     // Generate Spec
     SimulationSpec simuSpec = new SimulationSpec();
-    // simuSpec.setUuid(customUuid);
 
     // Add to Simulation
     simuCR.setMetadata(metaData);
@@ -59,28 +59,26 @@ public class SimulationFactory implements ISimulationFactory {
   /**
    * TODO needs dynamic Input
    * 
-   * @param customUuid
+   * @param simulationName
    * @throws SimulationCreationException
    * @throws IOException
    */
-  private void prepareInput(String customUuid) throws SimulationCreationException {
+  private void prepareInput(String simulationName) throws SimulationCreationException {
 
-    // SIMULATION_EXPERIMENT_FILES_PATH
 
-    String pathToInputFolder = SimulationProperties.SIMULATION_BASE_PATH + "/" + customUuid + "/"
-        + SimulationProperties.SIMULATION_INPUT_FOLDER_NAME;
 
     File srcDir = new File(SimulationProperties.SIMULATION_EXPERIMENT_FILES_PATH);
-    File destDir = new File(pathToInputFolder);
+    File destDir = new File(SimulationPathFactory.getPathToInputFolderOfSimulation(simulationName));
+
     try {
       FileUtils.copyDirectory(srcDir, destDir);
     } catch (IOException e) {
-      log.error("Could not copy input to destination for simulation with uuid=" + customUuid);
+      log.error("Could not copy input to destination for simulation with uuid=" + simulationName);
       throw new SimulationCreationException(e.getMessage(), e);
     }
 
     log.info("Successfully copied experiment data to destination for simulation with uuid="
-        + customUuid);
+        + simulationName);
 
   }
 
@@ -94,19 +92,18 @@ public class SimulationFactory implements ISimulationFactory {
    * - As soon as the Simulation is finished, the application can collect the results.
    * 
    */
-  private void prepareFolderStructure(String customUuid) {
+  private void prepareFolderStructure(String simulationName) {
 
+    String pathToInputFolder =
+        SimulationPathFactory.getPathToInputFolderOfSimulation(simulationName);
 
-    String pathToInputFolder = SimulationProperties.SIMULATION_BASE_PATH + "/" + customUuid + "/"
-        + SimulationProperties.SIMULATION_INPUT_FOLDER_NAME;
-
-    String pathToOutputFolder = SimulationProperties.SIMULATION_BASE_PATH + "/" + customUuid + "/"
-        + SimulationProperties.SIMULATION_OUTPUT_FOLDER_NAME;
+    String pathToOutputFolder =
+        SimulationPathFactory.getPathToOutputFolderOfSimulation(simulationName);
 
     new File(pathToInputFolder).mkdirs();
     new File(pathToOutputFolder).mkdirs();
 
-    log.info("Successfully create Folder Strucutre for simulation with uuid=" + customUuid);
+    log.info("Successfully create Folder Strucutre for simulation with uuid=" + simulationName);
 
   }
 

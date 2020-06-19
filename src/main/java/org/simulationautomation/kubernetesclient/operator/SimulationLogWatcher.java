@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import org.simulationautomation.kubernetesclient.api.ISimulationLogWatcher;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
+import org.simulationautomation.kubernetesclient.simulation.properties.SimulationPathFactory;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +35,7 @@ public class SimulationLogWatcher implements ISimulationLogWatcher {
 
     String simulationName = simulation.getMetadata().getName();
     String simulationPodName = simulationPod.getMetadata().getName();
-    String pathToLogFile = SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName + "/"
-        + SimulationProperties.SIMULATION_LOG_FILE_NAME;
+    String pathToLogFile = SimulationPathFactory.getPathToSimulationLogFile(simulationName);
 
     log.info("Register simulation log watcher for simulation with name=" + simulationName);
 

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodFactory;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
+import org.simulationautomation.kubernetesclient.simulation.properties.SimulationPathFactory;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,7 +102,8 @@ public class SimulationPodFactory implements ISimulationPodFactory {
 
     log.info("Create NFS Volume Definition for simulation with name= " + simulationId);
     NFSVolumeSource nfsVolumeSource = new NFSVolumeSource();
-    nfsVolumeSource.setPath("/" + simulationId + "/" + folderName + "/");
+    nfsVolumeSource.setPath(
+        SimulationPathFactory.getPathToSpecificFolderWithinSimulation(simulationId, folderName));
     nfsVolumeSource.setServer(SimulationProperties.NFS_SERVER_IP);
     Volume nfs_volume = new Volume();
     nfs_volume.setName(nfsName);
