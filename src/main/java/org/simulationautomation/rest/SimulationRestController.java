@@ -168,7 +168,7 @@ public class SimulationRestController {
 
     byte[] simulationLog = simulationServiceProxy.getSimulationLog(simulationName);
     if (simulationLog == null) {
-      String response = "Pod for Simulation with name=" + simulationName + " does not exist";
+      String response = "Log for Simulation with name=" + simulationName + " does not exist";
       log.info("Rest Response: " + response);
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
     }

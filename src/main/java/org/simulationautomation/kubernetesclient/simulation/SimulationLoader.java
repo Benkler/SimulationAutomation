@@ -154,6 +154,8 @@ public class SimulationLoader implements ISimulationLoader {
         FileUtil.deleteDirectory(pathToSimulation);
       }
 
+      // TODO any other criteria to delete simulation? What about log file?
+
     }
 
   }
