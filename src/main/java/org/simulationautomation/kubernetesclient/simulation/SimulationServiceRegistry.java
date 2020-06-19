@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import org.simulationautomation.kubernetesclient.api.ISimulationLoader;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,6 +24,9 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
   private Logger log = LoggerFactory.getLogger(SimulationServiceRegistry.class);
   private Map<String, Simulation> simulations = new ConcurrentHashMap<>();
 
+
+  @Autowired
+  ISimulationLoader simulationLoader;
 
   /**
    * Query all simulations currently stored in this service
@@ -79,6 +84,12 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
 
     simulation.getStatus().setStatus(simulationSatusCode);
     simulations.put(simulationName, simulation);
+
+    /*
+     * Write metadata to file system
+     */
+    simulationLoader.updateSimulationMetadata(simulation);
+
 
 
     if (simulationSatusCode == SimulationStatusCode.FAILED) {

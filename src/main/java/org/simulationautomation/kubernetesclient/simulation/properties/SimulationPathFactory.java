@@ -13,6 +13,11 @@ public class SimulationPathFactory {
         + SimulationProperties.SIMULATION_LOG_FILE_NAME;
   }
 
+  public static String getPathToSimulationMetadataFile(String simulationName) {
+    return SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName + "/"
+        + SimulationProperties.SIMULATION_METADATA_FILE_NAME;
+  }
+
 
 
   /**

@@ -27,6 +27,7 @@ public final class SimulationProperties {
   public static final String SIMULATION_INPUT_FOLDER_NAME = "Input";
   public static final String SIMULATION_OUTPUT_FOLDER_NAME = "Output";
   public static final String SIMULATION_LOG_FILE_NAME = "log.txt";
+  public static final String SIMULATION_METADATA_FILE_NAME = "simulation.txt";
   // TODO remove as soon as REST API is finished
   public static final String SIMULATION_EXPERIMENT_FILES_PATH =
       "/usr/ExperimentFiles/ExperimentData";

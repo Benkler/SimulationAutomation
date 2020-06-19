@@ -76,7 +76,7 @@ public class SimulationLogWatcher implements ISimulationLogWatcher {
 
           // Simulation Finished -> Close FileOutputStream
           log.info("Simulation with name=" + simulationName
-              + "is finished. Close FileOutputStream of LogWatcher");
+              + " is finished. Close FileOutputStream of LogWatcher");
           fos.close();
         } catch (InterruptedException e) {
           log.error("Logging error while waiting on simulation with name=" + simulationName, e);
