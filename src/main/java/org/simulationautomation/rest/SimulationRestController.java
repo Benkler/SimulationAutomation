@@ -25,7 +25,7 @@ public class SimulationRestController {
 
   private static final Logger log = LoggerFactory.getLogger(SimulationRestController.class);
 
-  @Autowired
+  @Autowired // TODO über Proxy zugreifen?
   ISimulationOperator operator;
 
   @Autowired
@@ -162,10 +162,25 @@ public class SimulationRestController {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
     }
 
+    byte[] simulationLog = simulationServiceProxy.getSimulationLog(simulationName);
+    if (simulationLog == null) {
+      String response = "Pod for Simulation with name=" + simulationName + " does not exist";
+      log.info("Rest Response: " + response);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
+    }
 
 
-    // TODO return logs
-    return null;
+
+    // Logs successfully retrieved
+    log.info("Rest Response: Query logs for Simulation with name=" + simulationName);
+    HttpHeaders headers = new HttpHeaders();
+
+    headers.add(HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=" + "logs_" + simulationName);
+    headers.add(HttpHeaders.CONTENT_TYPE, "text/plain");
+
+    return new ResponseEntity<byte[]>(simulationLog, headers, HttpStatus.OK);
+
 
 
   }

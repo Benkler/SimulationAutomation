@@ -18,6 +18,7 @@ public final class SimulationProperties {
    */
   public static final String SIMULATION_NAMESPACE = "simulations";
   public static final String SIMULATION_LABEL = "sim";
+  public static final int SIMULATION_DURATION_MAX_MIN = 10;
 
   /*
    * Properties used to manage folder structure
@@ -25,6 +26,7 @@ public final class SimulationProperties {
   public static final String SIMULATION_BASE_PATH = "/usr/Simulation";
   public static final String SIMULATION_INPUT_FOLDER_NAME = "Input";
   public static final String SIMULATION_OUTPUT_FOLDER_NAME = "Output";
+  public static final String SIMULATION_LOG_FILE_NAME = "log.txt";
   // TODO remove as soon as REST API is finished
   public static final String SIMULATION_EXPERIMENT_FILES_PATH =
       "/usr/ExperimentFiles/ExperimentData";

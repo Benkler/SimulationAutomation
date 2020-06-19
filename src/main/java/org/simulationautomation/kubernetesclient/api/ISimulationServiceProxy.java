@@ -16,6 +16,6 @@ public interface ISimulationServiceProxy {
    */
   byte[] getSimulationResults(String simulationName);
 
-  String getSimulationLog(String simulationName);
+  byte[] getSimulationLog(String simulationName);
 
 }

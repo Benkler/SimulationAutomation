@@ -7,6 +7,7 @@ import java.util.List;
 import org.simulationautomation.kubernetesclient.api.ICustomNameSpaceBuilder;
 import org.simulationautomation.kubernetesclient.api.IK8SCoreRuntime;
 import org.simulationautomation.kubernetesclient.api.ISimulationFactory;
+import org.simulationautomation.kubernetesclient.api.ISimulationLogWatcher;
 import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodFactory;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodWatcher;
@@ -59,16 +60,19 @@ public class SimulationOperator implements ISimulationOperator {
   private ISimulationPodWatcher simulationPodWatcher;
 
   @Autowired
+  private ISimulationLogWatcher simulationLogWatcher;
+
+  @Autowired
   private IK8SCoreRuntime k8SCoreRuntime;
 
   @Autowired
-  ICustomNameSpaceBuilder nsBuilder;
+  private ICustomNameSpaceBuilder nsBuilder;
 
   @Autowired
-  ISimulationPodFactory simulationPodFactory;
+  private ISimulationPodFactory simulationPodFactory;
 
   @Autowired
-  ISimulationFactory simulationFactory;
+  private ISimulationFactory simulationFactory;
 
   /**
    * Init all necessary fields, including simulation namespace, simulation resource definition and
@@ -153,15 +157,16 @@ public class SimulationOperator implements ISimulationOperator {
         persistedSimulation);
 
     // Create simulation pod for specified simulation
-    Pod simulationPod = createAndPersistSimulationPod(persistedSimulation);
+    Pod persistedSimulationPod = createAndPersistSimulationPod(persistedSimulation);
 
-    if (simulationPod == null) {
+    if (persistedSimulationPod == null) {
       deleteExistingSimulation(persistedSimulation);
       throw new SimulationCreationException("Could not create simulation with name="
           + persistedSimulation.getMetadata().getName() + ", as no Pod could be instantiated");
     }
 
-    registerSimulationPodLogWatcher(simulationPod);
+    // Register
+    registerSimulationPodLogWatcher(persistedSimulation, persistedSimulationPod);
 
 
     simulationsServiceRegistry.updateStatus(persistedSimulation.getMetadata().getName(),
@@ -169,11 +174,6 @@ public class SimulationOperator implements ISimulationOperator {
 
     return persistedSimulation;
 
-  }
-
-  private void registerSimulationPodLogWatcher(Pod simulationPod) {
-    String podName = simulationPod.getMetadata().getName();
-    // client.pods().inNamespace(SimulationProperties.SIMULATION_NAMESPACE).withName(podName).ge
   }
 
   /**
@@ -232,6 +232,14 @@ public class SimulationOperator implements ISimulationOperator {
     log.info("Registering Simulation Watcher");
     simulationCRDClient.watch(simulationWatcher);
 
+
+  }
+
+  /*
+   * Register LogWatcher for a given pod of a simulation.
+   */
+  private void registerSimulationPodLogWatcher(Simulation simulation, Pod simulationPod) {
+    simulationLogWatcher.registerSimulationPodLogWatcher(simulation, simulationPod);
 
   }
 

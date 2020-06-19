@@ -25,25 +25,37 @@ import org.springframework.stereotype.Service;
 @Service
 public class SimulationServiceProxy implements ISimulationServiceProxy {
 
-  @Autowired
-  ISimulationServiceRegistry simulationService;
 
   @Autowired
-  ISimulationLogService simulationLogService;
+  ISimulationServiceRegistry simulationServiceRegistry;
+
+
 
   private static final Logger log = LoggerFactory.getLogger(SimulationServiceProxy.class);
 
 
   @Override
-  public String getSimulationLog(String simulationName) {
+  public byte[] getSimulationLog(String simulationName) {
 
-    return "";
+    log.info("Trying to get log for simulation with name=" + simulationName);
+    String pathToLogFile = SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName + "/"
+        + SimulationProperties.SIMULATION_LOG_FILE_NAME;
+
+
+    byte[] log = loadFileAsByteStream(pathToLogFile);
+
+
+
+    return log;
+
+
+
   }
 
   @Override
   public boolean isSimulationFinished(String simulationName) {
 
-    SimulationStatus status = simulationService.getSimulationStatus(simulationName);
+    SimulationStatus status = simulationServiceRegistry.getSimulationStatus(simulationName);
 
     return status == null ? false : status.getStatus().equals(SimulationStatusCode.SUCCEEDED);
 
@@ -52,7 +64,7 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
 
   @Override
   public boolean doesSimulationExist(String simulationName) {
-    return simulationService.getSimulation(simulationName) != null;
+    return simulationServiceRegistry.getSimulation(simulationName) != null;
   }
 
   /**
@@ -103,7 +115,7 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
 
 
   /*
-   * Load file into byte Array
+   * Load file into byte Array TODO to util class
    */
   private byte[] loadFileAsByteStream(String path) {
 

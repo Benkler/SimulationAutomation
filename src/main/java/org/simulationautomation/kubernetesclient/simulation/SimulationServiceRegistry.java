@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  * @author Niko Benkler
  *
  */
-@Component(value = "simulationService")
+@Component
 public class SimulationServiceRegistry implements ISimulationServiceRegistry {
   private Logger log = LoggerFactory.getLogger(SimulationServiceRegistry.class);
   private Map<String, Simulation> simulations = new ConcurrentHashMap<>();
