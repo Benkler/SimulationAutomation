@@ -73,11 +73,11 @@ public class SimulationFactory implements ISimulationFactory {
     try {
       FileUtils.copyDirectory(srcDir, destDir);
     } catch (IOException e) {
-      log.error("Could not copy input to destination for simulation with uuid=" + simulationName);
+      log.error("Could not copy input to destination for simulation with name=" + simulationName);
       throw new SimulationCreationException(e.getMessage(), e);
     }
 
-    log.info("Successfully copied experiment data to destination for simulation with uuid="
+    log.info("Successfully copied experiment data to destination for simulation with name="
         + simulationName);
 
   }
@@ -103,7 +103,7 @@ public class SimulationFactory implements ISimulationFactory {
     new File(pathToInputFolder).mkdirs();
     new File(pathToOutputFolder).mkdirs();
 
-    log.info("Successfully create Folder Strucutre for simulation with uuid=" + simulationName);
+    log.info("Successfully create Folder Strucutre for simulation with name=" + simulationName);
 
   }
 

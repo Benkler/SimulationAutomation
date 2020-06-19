@@ -1,16 +1,11 @@
 package org.simulationautomation.kubernetesclient.simulation;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceProxy;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationPathFactory;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
+import org.simulationautomation.util.FileUtil;
 import org.simulationautomation.util.ZipUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +36,7 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
     log.info("Trying to get log for simulation with name=" + simulationName);
     String pathToLogFile = SimulationPathFactory.getPathToSimulationLogFile(simulationName);
 
-    byte[] log = loadFileAsByteStream(pathToLogFile);
+    byte[] log = FileUtil.loadFileAsByteStream(pathToLogFile);
 
 
 
@@ -90,60 +85,10 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
       return null;
     }
 
-    byte[] zipAsByteStream = loadFileAsByteStream(zipPath);
-    deleteFile(zipPath);
+    byte[] zipAsByteStream = FileUtil.loadFileAsByteStream(zipPath);
+    FileUtil.deleteFile(zipPath);
 
     return zipAsByteStream;
-  }
-
-  /*
-   * Delete file at specified path
-   */
-  private void deleteFile(String path) {
-    log.info("Trying to delete file at path=" + path);
-
-    try {
-      Files.deleteIfExists(Paths.get(path));
-      log.info("Successfully delete file");
-    } catch (IOException e) {
-      log.info("No such file!");
-    }
-
-  }
-
-
-  /*
-   * Load file into byte Array TODO to util class
-   */
-  private byte[] loadFileAsByteStream(String path) {
-
-    log.info("Load file at path=" + path);
-
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-    File zipFile = new File(path);
-    FileInputStream fis = null;
-
-    try {
-      fis = new FileInputStream(zipFile);
-      org.apache.commons.io.IOUtils.copy(fis, byteArrayOutputStream);
-    } catch (IOException e) {
-
-      log.error("Error while reading file.", e);
-      return null;
-    } finally {
-      try {
-        // Need to close this as it is a fileInputStream
-        fis.close();
-      } catch (IOException e) {
-
-      }
-    }
-
-
-
-    return byteArrayOutputStream.toByteArray();
-
   }
 
 

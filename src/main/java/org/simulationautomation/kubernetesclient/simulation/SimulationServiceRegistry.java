@@ -83,22 +83,22 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
 
     if (simulationSatusCode == SimulationStatusCode.FAILED) {
       log.info("Update status for Simulation with name=" + simulation.getMetadata().getName()
-          + " .Simulation failed!");
+          + ". Simulation failed!");
     }
 
     if (simulationSatusCode == SimulationStatusCode.SUCCEEDED) {
       log.info("Update status for Simulation with name=" + simulation.getMetadata().getName()
-          + " .Simulation succeded!");
+          + ". Simulation succeded!");
     }
 
     if (simulationSatusCode == SimulationStatusCode.RUNNING) {
       log.info("Update status for Simulation with name=" + simulation.getMetadata().getName()
-          + " .Simulation is running!");
+          + ". Simulation is running!");
     }
 
     if (simulationSatusCode == SimulationStatusCode.CREATING) {
       log.info("Update status for Simulation with name=" + simulation.getMetadata().getName()
-          + " .Simulation is created!");
+          + ". Simulation is created!");
     }
 
 

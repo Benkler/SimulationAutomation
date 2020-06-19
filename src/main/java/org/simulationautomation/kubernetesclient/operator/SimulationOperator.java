@@ -137,40 +137,31 @@ public class SimulationOperator implements ISimulationOperator {
   public Simulation createSimulation() throws SimulationCreationException {
     log.info("Trying to prepare simulation.");
 
-    // Create Simulation and prepare local folder structure
-    Simulation createdSimulation = simulationFactory.createAndPrepareSimulation();
-    String simulationName = createdSimulation.getMetadata().getName();
-    log.info("Successfully prepared simulation with id=" + simulationName);
+    // Create and persist simulation
+    Simulation createdSimulation = createSimulationCR();
+    Simulation persistedSimulation = persistSimulation(createdSimulation);
 
-    // Add simulation to k8s cluster
-    Simulation persistedSimulation = simulationCRDClient.createOrReplace(createdSimulation);
-    log.info("Successfully persisted simulation: " + persistedSimulation);
 
-    if (persistedSimulation == null) {
-      log.error("Error while creating simulation with name=" + simulationName);
-      throw new SimulationCreationException(
-          "Error while creating simulation with name=" + simulationName);
-    }
-
-    // Add simulation to local service registry
+    // Add simulation to local service registry and update status to created
     simulationsServiceRegistry.addSimulation(persistedSimulation.getMetadata().getName(),
         persistedSimulation);
+    simulationsServiceRegistry.updateStatus(persistedSimulation.getMetadata().getName(),
+        SimulationStatusCode.CREATED);
 
     // Create simulation pod for specified simulation
-    Pod persistedSimulationPod = createAndPersistSimulationPod(persistedSimulation);
+    Pod createdPod = createSimulationPod(persistedSimulation);
+    Pod persistedPod = persistSimulationPod(createdPod);
 
-    if (persistedSimulationPod == null) {
+
+    if (persistedPod == null) {
       deleteExistingSimulation(persistedSimulation);
       throw new SimulationCreationException("Could not create simulation with name="
           + persistedSimulation.getMetadata().getName() + ", as no Pod could be instantiated");
     }
 
     // Register
-    registerSimulationPodLogWatcher(persistedSimulation, persistedSimulationPod);
+    registerSimulationPodLogWatcher(persistedSimulation, persistedPod);
 
-
-    simulationsServiceRegistry.updateStatus(persistedSimulation.getMetadata().getName(),
-        SimulationStatusCode.RUNNING);
 
     return persistedSimulation;
 
@@ -182,13 +173,28 @@ public class SimulationOperator implements ISimulationOperator {
    * @param simulation
    * @throws SimulationCreationException
    */
-  private Pod createAndPersistSimulationPod(Simulation simulation)
-      throws SimulationCreationException {
-    log.info("Trying to add pod for simulation with name=" + simulation.getMetadata().getName()
+  private Pod persistSimulationPod(Pod simulationPod) throws SimulationCreationException {
+    log.info("Trying to add pod with name=" + simulationPod.getMetadata().getName()
         + " in namespace=" + SIMULATION_NAMESPACE);
-    Pod createdPod = simulationPodFactory.createSimulationPod(simulation);
-    return client.pods().inNamespace(SIMULATION_NAMESPACE).create(createdPod);
+    return client.pods().inNamespace(SIMULATION_NAMESPACE).create(simulationPod);
+  }
 
+  private Pod createSimulationPod(Simulation simulation) {
+    log.info("Trying to create pod for simulation with name=" + simulation.getMetadata().getName());
+    return simulationPodFactory.createSimulationPod(simulation);
+  }
+
+  private Simulation createSimulationCR() throws SimulationCreationException {
+    log.info("Trying to create Simulation");
+    Simulation simulation = simulationFactory.createAndPrepareSimulation();
+    log.info("Successfully created simulation with name=" + simulation.getMetadata().getName());
+    return simulation;
+  }
+
+  private Simulation persistSimulation(Simulation simulation) {
+    log.info("Trying to add simulation with name=" + simulation.getMetadata().getName()
+        + " in namespace=" + SIMULATION_NAMESPACE);
+    return simulationCRDClient.createOrReplace(simulation);
   }
 
   /*

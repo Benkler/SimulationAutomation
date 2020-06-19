@@ -22,6 +22,8 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
 
   static final String POD_PHASE_SUCCEEDED = "Succeeded";
   static final String POD_PHASE_FAILED = "Failed";
+  static final String POD_PHASE_RUNNING = "Running";
+
 
   private Logger log = LoggerFactory.getLogger(SimulationPodWatcher.class);
 
@@ -69,32 +71,33 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
       log.error("No simulation found for pod with name=" + podName + ". Cannot update status.");
     }
 
-
-    log.info("Pod with name " + podName + " is currently in phase " + pod.getStatus().getPhase());
+    String simulationName = simulation.getMetadata().getName();
 
     switch (pod.getStatus().getPhase()) {
       case POD_PHASE_FAILED:
-        simulationsServiceRegistry.updateStatus(simulation.getMetadata().getName(),
-            SimulationStatusCode.FAILED);
+        simulationsServiceRegistry.updateStatus(simulationName, SimulationStatusCode.FAILED);
         break;
       case POD_PHASE_SUCCEEDED:
-        simulationsServiceRegistry.updateStatus(simulation.getMetadata().getName(),
-            SimulationStatusCode.SUCCEEDED);
+        simulationsServiceRegistry.updateStatus(simulationName, SimulationStatusCode.SUCCEEDED);
+        break;
+      case POD_PHASE_RUNNING:
+        simulationsServiceRegistry.updateStatus(simulationName, SimulationStatusCode.RUNNING);
         break;
       default:
+        log.info("Alternative pod phase found: " + pod.getStatus().getPhase());
 
     }
 
 
+  }
+
+  private void handleAddAction(Pod pod) {
+    log.info("'Add Pod' Event received for Pod with name= " + pod.getMetadata().getName());
 
   }
 
   private void handleDeletedAction(Pod pod) {
     log.info("'Delete Pod' Event received for Pod with name= " + pod.getMetadata().getName());
-  }
-
-  private void handleAddAction(Pod pod) {
-    log.info("'Add Pod' Event received for Pod with name= " + pod.getMetadata().getName());
   }
 
   /*
