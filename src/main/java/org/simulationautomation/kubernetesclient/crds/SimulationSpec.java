@@ -15,27 +15,10 @@ public class SimulationSpec implements KubernetesResource {
 
   private static final long serialVersionUID = -424650618584495148L;
 
-
-  String uuid;
-
-
-
-  public String getUuid() {
-    return uuid;
-  }
-
-
-
-  public void setUuid(String uuid) {
-    this.uuid = uuid;
-  }
-
-
-
   @Override
   // TODO adapt
   public String toString() {
-    return "SimulationSpec{uuid=" + uuid + "}";
+    return "SimulationSpec{}";
   }
 
 

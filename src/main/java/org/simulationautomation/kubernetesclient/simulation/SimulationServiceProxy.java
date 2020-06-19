@@ -1,8 +1,12 @@
 package org.simulationautomation.kubernetesclient.simulation;
 
+import java.util.List;
+import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceProxy;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
+import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
+import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationPathFactory;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.simulationautomation.util.FileUtil;
@@ -13,7 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
- * Service class as Proxy between REST-interface and actual backend
+ * Service class as Proxy between REST-interface and actual backend for operations on specific
+ * simulations.
  * 
  * @author Niko Benkler
  *
@@ -23,8 +28,10 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
 
 
   @Autowired
-  ISimulationServiceRegistry simulationServiceRegistry;
+  private ISimulationServiceRegistry simulationServiceRegistry;
 
+  @Autowired
+  private ISimulationOperator operator;
 
 
   private static final Logger log = LoggerFactory.getLogger(SimulationServiceProxy.class);
@@ -38,11 +45,7 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
 
     byte[] log = FileUtil.loadFileAsByteStream(pathToLogFile);
 
-
-
     return log;
-
-
 
   }
 
@@ -91,6 +94,15 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
     return zipAsByteStream;
   }
 
+  @Override
+  public Simulation createSimulation() throws SimulationCreationException {
+    return operator.createSimulation();
+  }
+
+  @Override
+  public List<String> getSimulations() {
+    return simulationServiceRegistry.getSimulations();
+  }
 
 
 }

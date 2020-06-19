@@ -1,6 +1,8 @@
 package org.simulationautomation.kubernetesclient.api;
 
-
+import java.util.List;
+import org.simulationautomation.kubernetesclient.crds.Simulation;
+import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 
 public interface ISimulationServiceProxy {
 
@@ -17,5 +19,9 @@ public interface ISimulationServiceProxy {
   byte[] getSimulationResults(String simulationName);
 
   byte[] getSimulationLog(String simulationName);
+
+  Simulation createSimulation() throws SimulationCreationException;
+
+  List<String> getSimulations();
 
 }

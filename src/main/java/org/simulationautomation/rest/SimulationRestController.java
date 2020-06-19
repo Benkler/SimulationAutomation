@@ -2,7 +2,6 @@ package org.simulationautomation.rest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceProxy;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
@@ -21,12 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Component
+// TODO base path?
 public class SimulationRestController {
 
   private static final Logger log = LoggerFactory.getLogger(SimulationRestController.class);
 
-  @Autowired // TODO über Proxy zugreifen?
-  ISimulationOperator operator;
 
   @Autowired
   ISimulationServiceProxy simulationServiceProxy;
@@ -47,7 +45,7 @@ public class SimulationRestController {
 
     Simulation simulation;
     try {
-      simulation = operator.createSimulation();
+      simulation = simulationServiceProxy.createSimulation();
     } catch (SimulationCreationException e) {
       log.info("Bad Request: " + e.getMessage());
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -100,6 +98,12 @@ public class SimulationRestController {
 
 
 
+  /**
+   * Rest end point to get zipped simulation results
+   * 
+   * @param simulationName
+   * @return
+   */
   @RequestMapping(value = "/simulation/{simulationName}/results", method = RequestMethod.GET)
   public ResponseEntity<byte[]> getSimulationResults(
       @PathVariable(name = "simulationName") String simulationName) {

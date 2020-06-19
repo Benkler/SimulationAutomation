@@ -33,8 +33,9 @@ public class Simulation extends CustomResource {
 
   @Override
   public String toString() {
-    return "Simulation: Name=" + getMetadata().getName() + " apiVersion='" + getApiVersion() + "'"
-        + ", metadata=" + getMetadata() + ", spec=" + spec + ", status=" + status + "}";
+    return "Simulation: \nName=" + getMetadata().getName() + "\n apiVersion='" + getApiVersion()
+        + "'" + ",\nmetadata=" + getMetadata() + ",\nspec=" + getSpec().toString() + ",\nstatus="
+        + getStatus().toString() + "}";
   }
 
   @Override
