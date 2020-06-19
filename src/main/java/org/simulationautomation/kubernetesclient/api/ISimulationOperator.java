@@ -30,7 +30,7 @@ public interface ISimulationOperator {
    * @throws SimulationCreationException
    */
   // TODO further parameters necessary
-  Simulation createSimulation() throws SimulationCreationException;
+  Simulation createNewSimulation() throws SimulationCreationException;
 
   /**
    * Find Pod for Simulation with given name. </br>

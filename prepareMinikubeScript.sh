@@ -1,10 +1,12 @@
  #!/bin/bash
  
-  eval $(minikube docker-env)
+ 
   
   echo "---------------Starting to prepare minikube cluster-------------------"
   
   minikube delete --all && minikube start --driver=kvm2 --cpus 2 --memory 4096 
+  
+   eval $(minikube docker-env)
   
   docker pull cpuguy83/nfs-server
   

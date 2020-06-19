@@ -54,7 +54,7 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
 
     SimulationStatus status = simulationServiceRegistry.getSimulationStatus(simulationName);
 
-    return status == null ? false : status.getStatus().equals(SimulationStatusCode.SUCCEEDED);
+    return status == null ? false : status.getStatusCode().equals(SimulationStatusCode.SUCCEEDED);
 
   }
 
@@ -96,7 +96,7 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
 
   @Override
   public Simulation createSimulation() throws SimulationCreationException {
-    return operator.createSimulation();
+    return operator.createNewSimulation();
   }
 
   @Override

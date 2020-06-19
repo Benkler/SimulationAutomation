@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,20 @@ public class FileUtil {
 
   }
 
+  /**
+   * Delete Directory and content
+   * 
+   * @param path
+   */
+  public static void deleteDirectory(String pathToSimulation) {
+    log.info("Trying to delete directory at path=" + pathToSimulation);
+    try {
+      FileUtils.deleteDirectory(new File(pathToSimulation));
+      log.info("Successfully deleted directory!");
+    } catch (IOException e) {
+      log.error("Could not delete directory!", e);
+    }
+  }
 
 
   /**
@@ -46,11 +61,11 @@ public class FileUtil {
 
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-    File zipFile = new File(path);
+    File file = new File(path);
     FileInputStream fis = null;
 
     try {
-      fis = new FileInputStream(zipFile);
+      fis = new FileInputStream(file);
       org.apache.commons.io.IOUtils.copy(fis, byteArrayOutputStream);
     } catch (IOException e) {
 
@@ -59,7 +74,9 @@ public class FileUtil {
     } finally {
       try {
         // Need to close this as it is a fileInputStream
-        fis.close();
+        if (fis != null) {
+          fis.close();
+        }
       } catch (IOException e) {
 
       }

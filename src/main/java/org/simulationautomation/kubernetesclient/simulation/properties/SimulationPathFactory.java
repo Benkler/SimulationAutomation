@@ -6,6 +6,16 @@ public class SimulationPathFactory {
   /**
    * 
    * @param simulationName
+   * @return {SimulationProperties.SIMULATION_BASE_PATH}/{simulationName}
+   */
+  public static String getPathToSimulationFolder(String simulationName) {
+    return SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName;
+  }
+
+
+  /**
+   * 
+   * @param simulationName
    * @return {SimulationProperties.SIMULATION_BASE_PATH}/{simulationName}/{SimulationProperties.SIMULATION_LOG_FILE_NAME}
    */
   public static String getPathToSimulationLogFile(String simulationName) {

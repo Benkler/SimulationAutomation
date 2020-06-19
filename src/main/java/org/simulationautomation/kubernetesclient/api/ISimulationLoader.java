@@ -28,11 +28,8 @@ public interface ISimulationLoader {
    * 
    * @return
    */
-  List<Simulation> getAvailableSimulationsFromMetadata();
+  List<Simulation> loadAvailableSimulationsFromMetadata();
 
-  /**
-   * Clean up simulation folder: Delete simulations which were interrupted during execution.
-   */
-  void cleanUpSimulations();
+
 
 }

@@ -116,8 +116,8 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
   }
 
   @Override
-  public SimulationStatus getSimulationStatus(String simulatioUUID) {
-    return getSimulation(simulatioUUID).getStatus();
+  public SimulationStatus getSimulationStatus(String simulationName) {
+    return getSimulation(simulationName).getStatus();
   }
 
 

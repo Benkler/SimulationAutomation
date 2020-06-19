@@ -7,6 +7,7 @@ import java.util.List;
 import org.simulationautomation.kubernetesclient.api.ICustomNameSpaceBuilder;
 import org.simulationautomation.kubernetesclient.api.IK8SCoreRuntime;
 import org.simulationautomation.kubernetesclient.api.ISimulationFactory;
+import org.simulationautomation.kubernetesclient.api.ISimulationLoader;
 import org.simulationautomation.kubernetesclient.api.ISimulationLogWatcher;
 import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodFactory;
@@ -63,6 +64,9 @@ public class SimulationOperator implements ISimulationOperator {
   private ISimulationLogWatcher simulationLogWatcher;
 
   @Autowired
+  private ISimulationLoader simulationLoader;
+
+  @Autowired
   private IK8SCoreRuntime k8SCoreRuntime;
 
   @Autowired
@@ -85,14 +89,16 @@ public class SimulationOperator implements ISimulationOperator {
     // Creating CRD Client for simulation
     simulationCRDClient = k8SCoreRuntime.customResourcesClientInNameSpace(simulationCRD,
         Simulation.class, SimulationList.class, SimulationDoneable.class, SIMULATION_NAMESPACE);
-    // Delete simulations in namespace
-    deleteExistingSimulationsResources();
+    restoreExistingSimulations();
+
 
     // Register watcher for both, simulations (crds) and pods in namespace simulation
     registerSimulationWatcher();
     registerSimulationPodWatcher();
 
   }
+
+
 
   /**
    * List custom Resources for type Simulation in given namepsace
@@ -134,7 +140,7 @@ public class SimulationOperator implements ISimulationOperator {
    */
   // TODO further parameters necessary
   @Override
-  public Simulation createSimulation() throws SimulationCreationException {
+  public Simulation createNewSimulation() throws SimulationCreationException {
     log.info("Trying to prepare simulation.");
 
     // Create and persist simulation
@@ -200,13 +206,37 @@ public class SimulationOperator implements ISimulationOperator {
   /*
    * Delete existing resources after startup to avoid clashes in resource version
    */
-  private void deleteExistingSimulationsResources() {
+  private void deleteExistingSimulations() {
     // Load Existing Simulations
     List<Simulation> simulationList = simulationCRDClient.list().getItems();
     log.info("Amount of removed simulations: " + simulationList.size());
     simulationCRDClient.delete(simulationList);
 
   }
+
+  private void restoreExistingSimulations() {
+    log.info("Restore existing simulations");
+    // Delete simulation ressources in namespace to avoid resource version clashes
+    deleteExistingSimulations();
+
+    // Load simulations by metadata which is available on file system
+    List<Simulation> simulations = simulationLoader.loadAvailableSimulationsFromMetadata();
+
+    for (Simulation simulation : simulations) {
+      String simulationName = simulation.getMetadata().getName();
+      log.info("Restore simulation with name=" + simulationName);
+      simulation.getMetadata().setResourceVersion(null);
+      // Add to k8s cluster
+      Simulation persistedSimulation = persistSimulation(simulation);
+      // Add simulation to service registry
+      simulationsServiceRegistry.addSimulation(persistedSimulation.getMetadata().getName(),
+          persistedSimulation);
+      // TODO any other init procedures?
+    }
+
+  }
+
+
 
   private void deleteExistingSimulation(Simulation simulation) {
     log.info("Delete simulation with name=" + simulation.getMetadata().getName());

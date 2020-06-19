@@ -12,24 +12,24 @@ public class SimulationStatus implements KubernetesResource {
   private static final long serialVersionUID = 7606654973979034913L;
 
 
-  SimulationStatusCode status;
+  SimulationStatusCode statusCode;
 
 
 
-  public SimulationStatusCode getStatus() {
-    return status;
+  public SimulationStatusCode getStatusCode() {
+    return statusCode;
   }
 
 
 
   public void setStatus(SimulationStatusCode status) {
-    this.status = status;
+    this.statusCode = status;
   }
 
 
 
   @Override
   public String toString() {
-    return "SimulationStatus{ Status=" + status + "}";
+    return "SimulationStatus{ Status=" + statusCode + "}";
   };
 }
