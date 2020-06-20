@@ -26,7 +26,7 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
 
 
   @Autowired
-  ISimulationLoader simulationLoader;
+  private ISimulationLoader simulationLoader;
 
   /**
    * Query all simulations currently stored in this service

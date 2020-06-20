@@ -40,4 +40,6 @@ public interface ISimulationOperator {
    */
   Pod getPodBySimulationName(String simulationName);
 
+  void deleteExistingSimulationPod(Pod pod);
+
 }

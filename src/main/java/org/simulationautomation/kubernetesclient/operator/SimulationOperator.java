@@ -173,6 +173,20 @@ public class SimulationOperator implements ISimulationOperator {
 
   }
 
+  @Override
+  public void deleteExistingSimulationPod(Pod pod) {
+    String podName = pod.getMetadata().getName();
+    log.info("Delete pod with name=" + podName);
+    if (client.pods().inNamespace(SimulationProperties.SIMULATION_NAMESPACE).delete(pod)) {
+      log.info("Successfully delete pod with name=" + podName);
+    } else {
+      log.info("Could not delete pod with name=" + podName);
+    }
+
+  }
+
+
+
   /**
    * Try to create simulation
    * 
@@ -216,7 +230,10 @@ public class SimulationOperator implements ISimulationOperator {
 
   private void restoreExistingSimulations() {
     log.info("Restore existing simulations");
-    // Delete simulation ressources in namespace to avoid resource version clashes
+    /*
+     * Delete simulation ressources in namespace to avoid resource version clashes. This also
+     * deletes the pods belonging to those simulations.
+     */
     deleteExistingSimulations();
 
     // Load simulations by metadata which is available on file system
@@ -239,8 +256,14 @@ public class SimulationOperator implements ISimulationOperator {
 
 
   private void deleteExistingSimulation(Simulation simulation) {
-    log.info("Delete simulation with name=" + simulation.getMetadata().getName());
-    simulationCRDClient.delete(simulation);
+    String simuName = simulation.getMetadata().getName();
+    log.info("Delete simulation with name=" + simuName);
+    if (simulationCRDClient.delete(simulation)) {
+      log.info("Successfully deleted simulation with name=" + simuName);
+    } else {
+      log.info("Could not delete simulation with name=" + simuName);
+
+    }
   }
 
   private CustomResourceDefinition createAndRegisterSimulationCRD() {

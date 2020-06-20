@@ -4,6 +4,7 @@ import static org.simulationautomation.kubernetesclient.simulation.properties.Si
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodWatcher;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
@@ -29,6 +30,9 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
 
   @Autowired
   private ISimulationServiceRegistry simulationsServiceRegistry;
+
+  @Autowired
+  private ISimulationOperator operator;
 
   private Set<String> resourceVersions = new HashSet<>();
 
@@ -73,15 +77,21 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
 
     String simulationName = simulation.getMetadata().getName();
 
+    /*
+     * Handle modify action and delete pod in case the simulation failed or succeeded.
+     */
     switch (pod.getStatus().getPhase()) {
       case POD_PHASE_FAILED:
         simulationsServiceRegistry.updateStatus(simulationName, SimulationStatusCode.FAILED);
+        operator.deleteExistingSimulationPod(pod);
         break;
       case POD_PHASE_SUCCEEDED:
         simulationsServiceRegistry.updateStatus(simulationName, SimulationStatusCode.SUCCEEDED);
+        operator.deleteExistingSimulationPod(pod);
         break;
       case POD_PHASE_RUNNING:
         simulationsServiceRegistry.updateStatus(simulationName, SimulationStatusCode.RUNNING);
+
         break;
       default:
         log.info("Alternative pod phase found: " + pod.getStatus().getPhase());
@@ -98,6 +108,12 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
 
   private void handleDeletedAction(Pod pod) {
     log.info("'Delete Pod' Event received for Pod with name= " + pod.getMetadata().getName());
+  }
+
+  private void deletePod(Pod pod) {
+    log.info("Delete pod with name=" + pod.getMetadata().getName() + " in status "
+        + pod.getStatus().getPhase());
+
   }
 
   /*
