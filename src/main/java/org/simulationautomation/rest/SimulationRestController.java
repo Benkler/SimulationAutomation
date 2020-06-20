@@ -180,16 +180,16 @@ public class SimulationRestController {
     // Simulation finished
     byte[] contents = simulationServiceProxy.getSimulationResultFile(simulationName, fileName);
     if (contents == null) {
-      String response = "Simulation with name=" + simulationName
-          + " encountered an error while loading file with name=" + fileName;
+      String response =
+          "Simulation with name=" + simulationName + " does not have a file with name=" + fileName;
       log.info("Rest Response: " + response);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response.getBytes());
 
     } else {
 
       HttpHeaders headers = new HttpHeaders();
-      headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + simulationName);
-      headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
+      headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+      headers.add(HttpHeaders.CONTENT_TYPE, "text/plain");
 
       log.info("Successfully retrieved file with name=" + fileName + " for simulation with name="
           + simulationName);

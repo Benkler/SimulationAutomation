@@ -97,7 +97,8 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
     log.info(
         "Get file with name=" + fileName + " of result for simulation with name=" + simulationName);
 
-    String simulationBasePath = SimulationPathFactory.getPathToSimulationFolder(simulationName);
+    String simulationBasePath =
+        SimulationPathFactory.getPathToOutputFolderOfSimulation(simulationName);
 
     return FileUtil.loadFileFromDirectoryRecursively(simulationBasePath, fileName);
 

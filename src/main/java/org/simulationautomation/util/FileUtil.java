@@ -6,7 +6,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,19 +151,42 @@ public class FileUtil {
    * @return
    */
   public static byte[] loadFileFromDirectoryRecursively(String baseDirectoryPath, String fileName) {
+    Path start = Paths.get(baseDirectoryPath);
+    try (Stream<Path> stream = Files.walk(start, Integer.MAX_VALUE)) {
+      List<String> files = stream.filter(Files::isRegularFile).map(String::valueOf)
+          .filter(filePath -> filePath.endsWith("/" + fileName)).collect(Collectors.toList());
 
-    try {
-      Files.walk(Paths.get(baseDirectoryPath)).filter(Files::isRegularFile).forEach((f) -> {
-        String file = f.toString();
-        if (file.endsWith(fileName)) {
-          log.info("File found at path=" + file);
-        }
 
-      });
-    } catch (IOException e) {
+      if (files.size() > 0) {
+        log.info("Amount of files found with name=" + fileName + " :" + files.size()
+            + " .Get file at path " + files.get(0));
+        return loadFile(files.get(0)).toByteArray();
+      } else {
+        log.info("No File found with name=" + fileName);
+      }
 
-      log.error("IOException wihlie loading file with name=" + fileName);
+    } catch (IOException e1) {
+      log.error("IOException while loading file with name=" + fileName);
+
     }
+
+
+
+    // String existingFilePath = null;
+    // try {
+    // Files.walk(Paths.get(baseDirectoryPath)).filter(Files::isRegularFile).forEach((f) -> {
+    // final String filePath = f.toString();
+    // if (filePath.endsWith(fileName)) {
+    //
+    // existingFilePath = filePath;
+    // // return loadFile(filePath).toByteArray();
+    // }
+    //
+    // });
+    // } catch (IOException e) {
+    //
+    // log.error("IOException wihlie loading file with name=" + fileName);
+    // }
 
 
     return null;
