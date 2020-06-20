@@ -50,6 +50,19 @@ public class FileUtil {
 
 
   /**
+   * Load file into byte Array
+   * 
+   * @param path of the file
+   * @return
+   */
+  public static byte[] loadFileAsByteStream(String path) {
+
+
+    return loadFile(path).toByteArray();
+
+  }
+
+  /**
    * Load file into String
    * 
    * @param path of the file
@@ -57,6 +70,10 @@ public class FileUtil {
    */
   public static String loadFileAsString(String path) {
 
+    return loadFile(path).toString();
+  }
+
+  private static ByteArrayOutputStream loadFile(String path) {
     log.info("Load file at path=" + path);
 
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -84,21 +101,7 @@ public class FileUtil {
 
 
 
-    return byteArrayOutputStream.toString();
-
-  }
-
-
-  /**
-   * Load file into byte Array
-   * 
-   * @param path of the file
-   * @return
-   */
-  public static byte[] loadFileAsByteStream(String path) {
-
-
-    return loadFileAsString(path).getBytes();
+    return byteArrayOutputStream;
 
   }
 
