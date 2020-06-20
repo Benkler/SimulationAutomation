@@ -135,5 +135,32 @@ public class FileUtil {
 
   }
 
+  /**
+   * Searches for a file in a given directory recursively, which means also to search in all
+   * subdirectories.
+   * 
+   * @param simulationBasePath
+   * @param fileName
+   * @return
+   */
+  public static byte[] loadFileFromDirectoryRecursively(String baseDirectoryPath, String fileName) {
+
+    try {
+      Files.walk(Paths.get(baseDirectoryPath)).filter(Files::isRegularFile).forEach((f) -> {
+        String file = f.toString();
+        if (file.endsWith(fileName)) {
+          log.info("File found at path=" + file);
+        }
+
+      });
+    } catch (IOException e) {
+
+      log.error("IOException wihlie loading file with name=" + fileName);
+    }
+
+
+    return null;
+  }
+
 
 }

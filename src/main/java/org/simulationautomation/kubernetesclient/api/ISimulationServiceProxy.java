@@ -24,4 +24,6 @@ public interface ISimulationServiceProxy {
 
   List<String> getSimulations();
 
+  byte[] getSimulationResultFile(String simulationName, String fileName);
+
 }

@@ -25,9 +25,9 @@ public class ZipUtil {
    * @param directoryPath which has to be zipped
    * @return path to zip file
    */
-  public String createZipFileRecursively(String directoryPath, String destinationPath) {
-    // try with resources - creating outputstream and ZipOutputSttream
-    try (FileOutputStream fos = new FileOutputStream(destinationPath.concat(".zip"));
+  public String createZipFileRecursively(String directoryPath, String pathToZipFile) {
+    // try with resources - creating outputstream and ZipOutputStream
+    try (FileOutputStream fos = new FileOutputStream(pathToZipFile);
         ZipOutputStream zos = new ZipOutputStream(fos)) {
 
       Path sourcePath = Paths.get(directoryPath);
@@ -57,7 +57,7 @@ public class ZipUtil {
       });
 
 
-      return destinationPath.concat(".zip");
+      return pathToZipFile;
     } catch (IOException e) {
       log.error("Could not zip file at specified directoy path=" + directoryPath, e);
       return null;

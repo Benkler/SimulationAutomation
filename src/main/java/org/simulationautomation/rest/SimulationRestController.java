@@ -126,16 +126,8 @@ public class SimulationRestController {
     }
 
     // Simulation finished
-    log.info("Rest Response: Query results for Simulation with name=" + simulationName);
-    HttpHeaders headers = new HttpHeaders();
-
-    headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + simulationName);
-    headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
-
-
-
     byte[] contents = simulationServiceProxy.getSimulationResults(simulationName);
-    // TODO delete zip File
+
     if (contents == null) {
       String response =
           "Simulation with name=" + simulationName + " encountered an error while loading zip";
@@ -143,6 +135,10 @@ public class SimulationRestController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response.getBytes());
 
     } else {
+      HttpHeaders headers = new HttpHeaders();
+      headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + simulationName);
+      headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
+
       log.info("Successfully retrieve zip file for simulation with name=" + simulationName);
       return new ResponseEntity<byte[]>(contents, headers, HttpStatus.OK);
     }
@@ -150,6 +146,60 @@ public class SimulationRestController {
 
 
   }
+
+
+  /**
+   * Rest end point to get single result file
+   * 
+   * @param simulationName
+   * @return
+   */
+  @RequestMapping(value = "/simulation/{simulationName}/results/{fileName}/file",
+      method = RequestMethod.GET)
+  public ResponseEntity<byte[]> getSimulationResultFile(
+      @PathVariable(name = "simulationName") String simulationName,
+      @PathVariable(name = "fileName") String fileName) {
+
+    log.info("Rest Endpoint triggered: Get file with name=" + fileName
+        + " of results for simulation with name=" + simulationName);
+
+    // Check if simulation exists
+    if (!simulationServiceProxy.doesSimulationExist(simulationName)) {
+      String response = "Simulation with name=" + simulationName + " does not exist";
+      log.info("Rest Response: " + response);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
+    }
+
+    // Check if simulation is finished
+    if (!simulationServiceProxy.isSimulationFinished(simulationName)) {
+      String response = "Simulation with name=" + simulationName + " is not yet finished";
+      log.info("Rest Response: " + response);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
+    }
+
+    // Simulation finished
+    byte[] contents = simulationServiceProxy.getSimulationResultFile(simulationName, fileName);
+    if (contents == null) {
+      String response = "Simulation with name=" + simulationName
+          + " encountered an error while loading file with name=" + fileName;
+      log.info("Rest Response: " + response);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response.getBytes());
+
+    } else {
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + simulationName);
+      headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
+
+      log.info("Successfully retrieved file with name=" + fileName + " for simulation with name="
+          + simulationName);
+      return new ResponseEntity<byte[]>(contents, headers, HttpStatus.OK);
+    }
+
+
+
+  }
+
 
 
   @RequestMapping(value = "/simulation/{simulationName}/log", method = RequestMethod.GET)

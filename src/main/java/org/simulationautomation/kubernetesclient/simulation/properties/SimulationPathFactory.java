@@ -63,5 +63,11 @@ public class SimulationPathFactory {
         + SimulationProperties.SIMULATION_OUTPUT_FOLDER_NAME;
   }
 
+  public static String getPathToZipFileOfSImulation(String simulationName) {
+
+    return SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName + "/"
+        + SimulationProperties.SIMULATION_RESULT_ZIP_NAME;
+  }
+
 
 }

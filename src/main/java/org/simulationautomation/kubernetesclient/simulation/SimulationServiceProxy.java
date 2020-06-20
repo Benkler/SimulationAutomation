@@ -8,7 +8,6 @@ import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationPathFactory;
-import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.simulationautomation.util.FileUtil;
 import org.simulationautomation.util.ZipUtil;
 import org.slf4j.Logger;
@@ -77,11 +76,10 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
     String pathToOutputFolder =
         SimulationPathFactory.getPathToOutputFolderOfSimulation(simulationName);
     // Path and name for zip file -> SimulationResults.zip
-    String destinationPath =
-        SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName + "/SimulationResults";
+    String pathToZipFile = SimulationPathFactory.getPathToZipFileOfSImulation(simulationName);
 
     ZipUtil zipUtil = new ZipUtil();
-    String zipPath = zipUtil.createZipFileRecursively(pathToOutputFolder, destinationPath);
+    String zipPath = zipUtil.createZipFileRecursively(pathToOutputFolder, pathToZipFile);
 
     if (zipPath == null) {
       log.info("Could not create zip file for simulation with name=" + simulationName);
@@ -92,6 +90,18 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
     FileUtil.deleteFile(zipPath);
 
     return zipAsByteStream;
+  }
+
+  @Override
+  public byte[] getSimulationResultFile(String simulationName, String fileName) {
+    log.info(
+        "Get file with name=" + fileName + " of result for simulation with name=" + simulationName);
+
+    String simulationBasePath = SimulationPathFactory.getPathToSimulationFolder(simulationName);
+
+    return FileUtil.loadFileFromDirectoryRecursively(simulationBasePath, fileName);
+
+
   }
 
   @Override
