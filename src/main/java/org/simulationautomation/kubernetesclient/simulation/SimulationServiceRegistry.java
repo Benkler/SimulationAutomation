@@ -95,7 +95,6 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
 
     // Update status with updateStatus() method does somehow not work
     // simulationCRDClient.updateStatus(simulation);
-    simulationCRDClient.createOrReplace(simulation);
 
 
 
