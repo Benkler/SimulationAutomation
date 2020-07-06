@@ -34,6 +34,10 @@ public class SimulationPodFactory implements ISimulationPodFactory {
 
     log.info("Create Pod from Simulation with name= " + simulationName);
 
+    /*
+     * Name of Volume here specifies the volume mount during container creation in
+     * createVolumeMount()
+     */
     Volume inputVolume = createNFSVolumeDefinition(NFS_INPUT_NAME, simulationName,
         SimulationProperties.SIMULATION_INPUT_FOLDER_NAME);
     Volume outpuVolume = createNFSVolumeDefinition(NFS_OUTPUT_NAME, simulationName,

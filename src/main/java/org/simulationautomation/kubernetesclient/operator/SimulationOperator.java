@@ -9,7 +9,6 @@ import org.simulationautomation.kubernetesclient.api.ISimulationLogWatcher;
 import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodFactory;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodWatcher;
-import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.api.ISimulationWatcher;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationDoneable;
@@ -43,8 +42,6 @@ public class SimulationOperator implements ISimulationOperator {
   @Autowired
   private KubernetesClient client;
 
-  @Autowired
-  private ISimulationServiceRegistry simulationsServiceRegistry;
 
   @Autowired
   private ISimulationWatcher simulationWatcher;
