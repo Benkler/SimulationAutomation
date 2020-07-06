@@ -1,17 +1,18 @@
 package org.simulationautomation.kubernetesclient.simulation;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import org.simulationautomation.kubernetesclient.api.ISimulationLoader;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
+import org.simulationautomation.kubernetesclient.crds.SimulationDoneable;
+import org.simulationautomation.kubernetesclient.crds.SimulationList;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 
 /**
  * This class manages the current Simulations
@@ -23,11 +24,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class SimulationServiceRegistry implements ISimulationServiceRegistry {
   private Logger log = LoggerFactory.getLogger(SimulationServiceRegistry.class);
-  private Map<String, Simulation> simulations = new ConcurrentHashMap<>();
+
+  @Autowired
+  private NonNamespaceOperation<Simulation, SimulationList, SimulationDoneable, Resource<Simulation, SimulationDoneable>> simulationCRDClient;
 
 
   @Autowired
   private ISimulationLoader simulationLoader;
+
+
 
   /**
    * Query all simulations currently stored in this service
@@ -35,35 +40,30 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
    * @return
    */
   @Override
-  public List<String> getSimulations() {
-    log.info("Query all simulations in simulationService");
-    return simulations.values().stream().map(a -> a.getMetadata().getName())
-        .collect(Collectors.toList());
+  public List<Simulation> getSimulations() {
+    log.info("Query all simulations in namespace");
+    return simulationCRDClient.list().getItems();
   }
 
 
-  @Override
-  public void addSimulation(String simulationName, Simulation simulation) {
-    log.info("Add simulation to simulation service: " + simulation);
-    simulations.put(simulationName, simulation);
-
-  }
-
-  @Override
-  public Simulation removeSimulation(String simulationName) {
-    log.info("Remove simulation from simulationService with name= " + simulationName);
-    return simulations.remove(simulationName);
-  }
 
   @Override
   public Simulation getSimulation(String simulationName) {
-    return simulations.get(simulationName);
-  }
+    log.info("Query simulation with name=" + simulationName);
+    if (simulationName == null) {
+      log.info("Could not query simulation as given name was null");
+      return null;
+    }
+    List<Simulation> simulations = simulationCRDClient.list().getItems();
 
-
-  @Override
-  public Map<String, Simulation> getSimulationsMap() {
-    return simulations;
+    for (Simulation simulation : simulations) {
+      if (simulation.getMetadata().getName().equals(simulationName)) {
+        log.info("Returning simulation with name=" + simulationName);
+        return simulation;
+      }
+    }
+    log.info("No Simulation found for name=" + simulationName);
+    return null;
   }
 
 
@@ -74,8 +74,15 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
    * @param simulationSatusCode
    */
   @Override
-  public void updateStatus(String simulationName, SimulationStatusCode simulationSatusCode) {
-    Simulation simulation = getSimulation(simulationName);
+  public void updateStatus(Simulation simulation, SimulationStatusCode simulationSatusCode) {
+    if (simulation == null) {
+      log.error("Provided simulation is null!");
+    }
+
+    String simulationName = simulation.getMetadata().getName();
+
+    log.info("Trying to update simulation with name=" + simulationName);
+
 
     if (simulation.getStatus() == null) {
       log.error("Status for simulation with name=" + simulationName
@@ -84,7 +91,13 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
     }
 
     simulation.getStatus().setStatus(simulationSatusCode);
-    simulations.put(simulationName, simulation);
+    log.info("New status is: " + simulation.getStatus().toString());
+
+    // Update status with updateStatus() method does somehow not work
+    // simulationCRDClient.updateStatus(simulation);
+    simulationCRDClient.createOrReplace(simulation);
+
+
 
     /*
      * Write metadata to file system
@@ -108,7 +121,7 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
           + ". Simulation is running!");
     }
 
-    if (simulationSatusCode == SimulationStatusCode.CREATING) {
+    if (simulationSatusCode == SimulationStatusCode.CREATED) {
       log.info("Update status for Simulation with name=" + simulation.getMetadata().getName()
           + ". Simulation is created!");
     }
@@ -118,7 +131,16 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
 
   @Override
   public SimulationStatus getSimulationStatus(String simulationName) {
-    return getSimulation(simulationName).getStatus();
+    Simulation simulation = getSimulation(simulationName);
+    if (simulation == null) {
+      log.error("Could not retrieve simulation status for simulation with name= " + simulationName
+          + ". Simulation not found");
+      return null;
+    } else {
+      return simulation.getStatus();
+    }
+
+
   }
 
 

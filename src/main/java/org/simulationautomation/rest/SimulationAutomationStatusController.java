@@ -23,7 +23,7 @@ public class SimulationAutomationStatusController {
   @GetMapping("/simulationautomation/simulations")
   public ResponseEntity<List<String>> getSimulationStatus() {
     log.info("Rest Endpoint triggered: Query all active simulations");
-    List<String> existingSimulations = simulationAutomationServiceProxy.getExistingSimulations();
+    List<String> existingSimulations = simulationAutomationServiceProxy.getNamesOfExistingSimulations();
 
     log.info("Following simulations exist: " + existingSimulations.toString());
     return new ResponseEntity<List<String>>(existingSimulations, HttpStatus.OK);

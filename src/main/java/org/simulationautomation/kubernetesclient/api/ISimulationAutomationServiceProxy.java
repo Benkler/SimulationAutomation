@@ -4,6 +4,6 @@ import java.util.List;
 
 public interface ISimulationAutomationServiceProxy {
 
-  List<String> getExistingSimulations();
+  List<String> getNamesOfExistingSimulations();
 
 }

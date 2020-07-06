@@ -1,11 +1,8 @@
 package org.simulationautomation.kubernetesclient.operator;
 
-import static org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties.SIMULATION_GROUP;
-import static org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties.SIMULATION_KIND;
 import static org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties.SIMULATION_NAMESPACE;
 import java.util.List;
 import org.simulationautomation.kubernetesclient.api.ICustomNameSpaceBuilder;
-import org.simulationautomation.kubernetesclient.api.IK8SCoreRuntime;
 import org.simulationautomation.kubernetesclient.api.ISimulationFactory;
 import org.simulationautomation.kubernetesclient.api.ISimulationLoader;
 import org.simulationautomation.kubernetesclient.api.ISimulationLogWatcher;
@@ -18,16 +15,13 @@ import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationDoneable;
 import org.simulationautomation.kubernetesclient.crds.SimulationList;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
-import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
-import org.simulationautomation.kubernetesclient.util.SimulationCRDUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -42,10 +36,8 @@ public class SimulationOperator implements ISimulationOperator {
 
   private Logger log = LoggerFactory.getLogger(SimulationOperator.class);
 
-  private CustomResourceDefinition simulationCRD = null;
 
-  // private String simulationResourceVersion;
-
+  @Autowired
   private NonNamespaceOperation<Simulation, SimulationList, SimulationDoneable, Resource<Simulation, SimulationDoneable>> simulationCRDClient;
 
   @Autowired
@@ -67,9 +59,6 @@ public class SimulationOperator implements ISimulationOperator {
   private ISimulationLoader simulationLoader;
 
   @Autowired
-  private IK8SCoreRuntime k8SCoreRuntime;
-
-  @Autowired
   private ICustomNameSpaceBuilder nsBuilder;
 
   @Autowired
@@ -85,12 +74,8 @@ public class SimulationOperator implements ISimulationOperator {
   @Override
   public void init() {
     nsBuilder.createNamespace(SIMULATION_NAMESPACE);
-    simulationCRD = createAndRegisterSimulationCRD();
-    // Creating CRD Client for simulation
-    simulationCRDClient = k8SCoreRuntime.customResourcesClientInNameSpace(simulationCRD,
-        Simulation.class, SimulationList.class, SimulationDoneable.class, SIMULATION_NAMESPACE);
-    restoreExistingSimulations();
 
+    restoreExistingSimulations();
 
     // Register watcher for both, simulations (crds) and pods in namespace simulation
     registerSimulationWatcher();
@@ -99,18 +84,6 @@ public class SimulationOperator implements ISimulationOperator {
   }
 
 
-
-  /**
-   * List custom Resources for type Simulation in given namepsace
-   * 
-   * @param namespace
-   * @return
-   * @return
-   */
-  @Override
-  public List<Simulation> listExistingSimulations() {
-    return simulationCRDClient.list().getItems();
-  }
 
   @Override
   public Pod getPodBySimulationName(String simulationName) {
@@ -148,12 +121,6 @@ public class SimulationOperator implements ISimulationOperator {
     Simulation persistedSimulation = persistSimulation(createdSimulation);
 
 
-    // Add simulation to local service registry and update status to created
-    simulationsServiceRegistry.addSimulation(persistedSimulation.getMetadata().getName(),
-        persistedSimulation);
-    simulationsServiceRegistry.updateStatus(persistedSimulation.getMetadata().getName(),
-        SimulationStatusCode.CREATED);
-
     // Create simulation pod for specified simulation
     Pod createdPod = createSimulationPod(persistedSimulation);
     Pod persistedPod = persistSimulationPod(createdPod);
@@ -168,6 +135,7 @@ public class SimulationOperator implements ISimulationOperator {
     // Register
     registerSimulationPodLogWatcher(persistedSimulation, persistedPod);
 
+    log.info("Simulation successfully persisted. Simulation is: " + persistedSimulation.toString());
 
     return persistedSimulation;
 
@@ -242,13 +210,15 @@ public class SimulationOperator implements ISimulationOperator {
     for (Simulation simulation : simulations) {
       String simulationName = simulation.getMetadata().getName();
       log.info("Restore simulation with name=" + simulationName);
-      // TODO why?
+      /*
+       * Kubernetes API forbids to add crd with a resource version (this will be set automatically
+       * by kubernetes)
+       */
       simulation.getMetadata().setResourceVersion(null);
       // Add to k8s cluster
       Simulation persistedSimulation = persistSimulation(simulation);
-      // Add simulation to service registry
-      simulationsServiceRegistry.addSimulation(persistedSimulation.getMetadata().getName(),
-          persistedSimulation);
+      log.info("Simulation with name=" + persistedSimulation.getMetadata().getName()
+          + " successfully restored");
       // TODO any other init procedures?
     }
 
@@ -267,15 +237,7 @@ public class SimulationOperator implements ISimulationOperator {
     }
   }
 
-  private CustomResourceDefinition createAndRegisterSimulationCRD() {
 
-    CustomResourceDefinition simuCRD = SimulationCRDUtil.getCRD();
-    k8SCoreRuntime.registerCustomResourceDefinition(simuCRD);
-    k8SCoreRuntime.registerCustomKind(SIMULATION_GROUP + "/v1", SIMULATION_KIND, Simulation.class);
-
-    log.info("SimulationCRD successfully registered");
-    return simuCRD;
-  }
 
   /*
    * Register Pod Watcher in namespace "simulation".

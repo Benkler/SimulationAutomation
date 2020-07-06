@@ -1,12 +1,10 @@
 package org.simulationautomation.kubernetesclient.util;
 
 import java.util.Collections;
-
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionNames;
@@ -46,6 +44,7 @@ public class SimulationCRDUtil {
     crdNames.setKind(SimulationProperties.SIMULATION_KIND);
     crdNames.setShortNames(Collections.singletonList(SimulationProperties.SIMULATION_SHORT_NAME));
 
+
     CustomResourceDefinitionSpec crdSpec = new CustomResourceDefinitionSpec();
     crdSpec.setGroup(SimulationProperties.SIMULATION_GROUP);
     crdSpec.setVersions(Collections.singletonList(crdVersion));
@@ -56,12 +55,6 @@ public class SimulationCRDUtil {
     simulationCRD.setApiVersion("apiextensions.k8s.io/v1beta1");
     simulationCRD.setMetadata(metadata);
     simulationCRD.setSpec(crdSpec);
-
-    // Load CRD as object from YAML
-    // CustomResourceDefinition crd = client.customResourceDefinitions()
-    // .load(SimulationCustomResourceDefinitionBuilder.class
-    // .getResourceAsStream(PATH_TO_SIMULATION_CRD))
-    // .get();
 
     log.info("Custom resource definition successfully created");
 

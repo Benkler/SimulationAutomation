@@ -6,14 +6,7 @@ import org.simulationautomation.kubernetesclient.crds.Simulation;
 
 public interface ISimulationLoader {
 
-  /**
-   * Create Simulation-Object from metadata file (persisted on file system). </br>
-   * 
-   * 
-   * @param simulationName
-   * @return simulation OR null if not found
-   */
-  Simulation loadSimulationFromMetadata(String simulationName);
+
 
   /**
    * Update simulation metadata: Simulation will be serialized into json format and stored in file

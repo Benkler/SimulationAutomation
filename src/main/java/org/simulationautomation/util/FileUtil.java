@@ -61,6 +61,11 @@ public class FileUtil {
    */
   public static byte[] loadFileAsByteStream(String path) {
 
+    ByteArrayOutputStream stream = loadFile(path);
+
+    if (stream == null) {
+      return null;
+    }
 
     return loadFile(path).toByteArray();
 
@@ -73,6 +78,13 @@ public class FileUtil {
    * @return
    */
   public static String loadFileAsString(String path) {
+
+
+    ByteArrayOutputStream stream = loadFile(path);
+
+    if (stream == null) {
+      return null;
+    }
 
     return loadFile(path).toString();
   }

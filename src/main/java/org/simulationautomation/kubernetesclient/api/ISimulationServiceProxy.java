@@ -22,7 +22,7 @@ public interface ISimulationServiceProxy {
 
   Simulation createSimulation() throws SimulationCreationException;
 
-  List<String> getSimulations();
+  List<Simulation> getSimulations();
 
   byte[] getSimulationResultFile(String simulationName, String fileName);
 

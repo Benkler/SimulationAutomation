@@ -4,6 +4,7 @@ import org.simulationautomation.kubernetesclient.api.IK8SCoreRuntime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -29,6 +30,7 @@ public class K8SCoreRuntime implements IK8SCoreRuntime {
   private Logger log = LoggerFactory.getLogger(K8SCoreRuntime.class);
 
   @Autowired
+  @Lazy
   private KubernetesClient kubernetesClient;
 
   /**

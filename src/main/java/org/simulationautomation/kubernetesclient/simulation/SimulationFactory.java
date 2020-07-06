@@ -46,8 +46,9 @@ public class SimulationFactory implements ISimulationFactory {
     simuCR.setMetadata(metaData);
     simuCR.setSpec(simuSpec);
 
+
     SimulationStatus status = new SimulationStatus();
-    status.setStatus(SimulationStatusCode.CREATING);
+    status.setStatus(SimulationStatusCode.CREATED);
     simuCR.setStatus(status);
 
     // TODO set further spec

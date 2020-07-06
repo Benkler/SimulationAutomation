@@ -42,9 +42,14 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
     log.info("Trying to get log for simulation with name=" + simulationName);
     String pathToLogFile = SimulationPathFactory.getPathToSimulationLogFile(simulationName);
 
-    byte[] log = FileUtil.loadFileAsByteStream(pathToLogFile);
+    byte[] logArray = FileUtil.loadFileAsByteStream(pathToLogFile);
 
-    return log;
+    if (logArray == null) {
+      log.info("Could not get log for simulation with name=" + simulationName);
+      return null;
+    }
+
+    return logArray;
 
   }
 
@@ -89,6 +94,8 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
     byte[] zipAsByteStream = FileUtil.loadFileAsByteStream(zipPath);
     FileUtil.deleteFile(zipPath);
 
+
+
     return zipAsByteStream;
   }
 
@@ -111,7 +118,7 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
   }
 
   @Override
-  public List<String> getSimulations() {
+  public List<Simulation> getSimulations() {
     return simulationServiceRegistry.getSimulations();
   }
 

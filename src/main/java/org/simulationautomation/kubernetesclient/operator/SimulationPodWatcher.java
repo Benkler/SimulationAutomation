@@ -1,9 +1,10 @@
 package org.simulationautomation.kubernetesclient.operator;
 
 import static org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties.SIMULATION_KIND;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodWatcher;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
@@ -34,7 +35,8 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
   @Autowired
   private ISimulationOperator operator;
 
-  private Set<String> resourceVersions = new HashSet<>();
+  private Set<String> resourceVersions =
+      Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
 
   @Override
   public void eventReceived(Watcher.Action action, Pod pod) {
@@ -53,10 +55,10 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
 
     if (action.equals(Action.ADDED)) {
       handleAddAction(pod);
-    } else if (action.equals(Action.MODIFIED)) {
-      handleModifyAction(pod);
     } else if (action.equals(Action.DELETED)) {
       handleDeletedAction(pod);
+    } else if (action.equals(Action.MODIFIED)) {
+      handleModifyAction(pod);
     }
 
   }
@@ -64,7 +66,8 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
   private void handleModifyAction(Pod pod) {
     String podName = pod.getMetadata().getName();
 
-    log.info("'Modify Pod' Event received for Pod with name= " + podName);
+    log.info("'Modify Pod' Event received for Pod with name= " + podName + " and resource version="
+        + pod.getMetadata().getResourceVersion());
     if (pod.getStatus() == null) {
       log.error("Pod status for Pod with name= " + podName + "is null!");
       return;
@@ -73,24 +76,24 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
     Simulation simulation = getSimulationFromPod(pod);
     if (simulation == null) {
       log.error("No simulation found for pod with name=" + podName + ". Cannot update status.");
+      return;
     }
 
-    String simulationName = simulation.getMetadata().getName();
 
     /*
      * Handle modify action and delete pod in case the simulation failed or succeeded.
      */
     switch (pod.getStatus().getPhase()) {
       case POD_PHASE_FAILED:
-        simulationsServiceRegistry.updateStatus(simulationName, SimulationStatusCode.FAILED);
+        simulationsServiceRegistry.updateStatus(simulation, SimulationStatusCode.FAILED);
         operator.deleteExistingSimulationPod(pod);
         break;
       case POD_PHASE_SUCCEEDED:
-        simulationsServiceRegistry.updateStatus(simulationName, SimulationStatusCode.SUCCEEDED);
+        simulationsServiceRegistry.updateStatus(simulation, SimulationStatusCode.SUCCEEDED);
         operator.deleteExistingSimulationPod(pod);
         break;
       case POD_PHASE_RUNNING:
-        simulationsServiceRegistry.updateStatus(simulationName, SimulationStatusCode.RUNNING);
+        simulationsServiceRegistry.updateStatus(simulation, SimulationStatusCode.RUNNING);
 
         break;
       default:

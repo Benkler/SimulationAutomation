@@ -31,29 +31,6 @@ public class SimulationLoader implements ISimulationLoader {
   private static final List<SimulationStatusCode> validStatusForRestoring =
       Arrays.asList(SimulationStatusCode.SUCCEEDED);
 
-  /**
-   * Create Simulation-Object from metadata file (persisted on file system). </br>
-   * 
-   * 
-   * @param simulationName
-   * @return simulation OR null if not found
-   */
-  @Override
-  public Simulation loadSimulationFromMetadata(String simulationName) {
-
-    log.info("Trying to load metadata of simulation with name=" + simulationName);
-    String json = FileUtil
-        .loadFileAsString(SimulationPathFactory.getPathToSimulationMetadataFile(simulationName));
-
-    if (json == null) {
-      log.info("Could not load metadata for simulation with name=" + simulationName);
-      return null;
-    }
-
-    Gson gson = new Gson();
-    Simulation simulation = gson.fromJson(json, Simulation.class);
-    return simulation;
-  }
 
 
   /**
@@ -109,6 +86,10 @@ public class SimulationLoader implements ISimulationLoader {
       String pathToSimulationMetaData =
           SimulationPathFactory.getPathToSimulationMetadataFile(simulationName);
       String simulationAsJson = FileUtil.loadFileAsString(pathToSimulationMetaData);
+      if (simulationAsJson == null) {
+        log.error("Could not recover simulation from metadata with name=" + simulationName);
+        continue;
+      }
       Simulation recoveredSimulation = gson.fromJson(simulationAsJson, Simulation.class);
       availableSimulations.add(recoveredSimulation);
 
@@ -140,7 +121,8 @@ public class SimulationLoader implements ISimulationLoader {
       String pathToSimulation = SimulationPathFactory.getPathToSimulationFolder(simulationName);
       // Delete if no metadata available
       if (simulationAsJson == null) {
-
+        log.info("Simulation with name= " + simulationName
+            + " has no metadata and will be deleted from file system");
         FileUtil.deleteDirectory(pathToSimulation);
       }
 
