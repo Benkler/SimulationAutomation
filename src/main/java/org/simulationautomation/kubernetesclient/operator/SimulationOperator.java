@@ -242,6 +242,7 @@ public class SimulationOperator implements ISimulationOperator {
     for (Simulation simulation : simulations) {
       String simulationName = simulation.getMetadata().getName();
       log.info("Restore simulation with name=" + simulationName);
+      // TODO why?
       simulation.getMetadata().setResourceVersion(null);
       // Add to k8s cluster
       Simulation persistedSimulation = persistSimulation(simulation);

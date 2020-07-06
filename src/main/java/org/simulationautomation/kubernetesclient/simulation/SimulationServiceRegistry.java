@@ -15,10 +15,11 @@ import org.springframework.stereotype.Component;
 
 /**
  * This class manages the current Simulations
- * 
+ *
  * @author Niko Benkler
  *
  */
+// TODO HashMap rausschmeißen
 @Component
 public class SimulationServiceRegistry implements ISimulationServiceRegistry {
   private Logger log = LoggerFactory.getLogger(SimulationServiceRegistry.class);

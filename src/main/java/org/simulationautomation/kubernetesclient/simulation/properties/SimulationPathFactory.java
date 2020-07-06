@@ -2,6 +2,17 @@ package org.simulationautomation.kubernetesclient.simulation.properties;
 
 public class SimulationPathFactory {
 
+  private static SimulationPathFactory INSTANCE;
+
+  private SimulationPathFactory() {};
+
+  // Singleton
+  public static synchronized SimulationPathFactory getInstance() {
+    if (INSTANCE == null) {
+      SimulationPathFactory.INSTANCE = new SimulationPathFactory();
+    }
+    return SimulationPathFactory.INSTANCE;
+  }
 
   /**
    * 

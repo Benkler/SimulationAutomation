@@ -34,7 +34,6 @@ public class SimulationLogWatcher implements ISimulationLogWatcher {
   public void registerSimulationPodLogWatcher(Simulation simulation, Pod simulationPod) {
 
     String simulationName = simulation.getMetadata().getName();
-    String simulationPodName = simulationPod.getMetadata().getName();
     String pathToLogFile = SimulationPathFactory.getPathToSimulationLogFile(simulationName);
 
     log.info("Register simulation log watcher for simulation with name=" + simulationName);
@@ -42,14 +41,33 @@ public class SimulationLogWatcher implements ISimulationLogWatcher {
 
     // Create log file
     File logFile = new File(pathToLogFile);
-    FileOutputStream fos;
-    try {
+
+    try (FileOutputStream fos = new FileOutputStream(logFile);) {
       logFile.createNewFile();
-      fos = new FileOutputStream(logFile);
+
+      // Create and start log Thread
+      Thread logThread = createLogThread(fos, simulation, simulationPod);
+      logThread.start();
     } catch (IOException e) {
       log.error("Error while creating log file. ErrorMessage=" + e.getMessage());
       return;
     }
+
+
+
+  }
+
+  /**
+   * Create Thread that watches the logs for a specified simulation and writes it to a file
+   * 
+   * @param fos
+   * @param simulation
+   * @param simulationPod
+   * @return
+   */
+  private Thread createLogThread(FileOutputStream fos, Simulation simulation, Pod simulationPod) {
+    String simulationName = simulation.getMetadata().getName();
+    String simulationPodName = simulationPod.getMetadata().getName();
 
 
     Thread logThread = new Thread() {
@@ -84,15 +102,14 @@ public class SimulationLogWatcher implements ISimulationLogWatcher {
           log.error("Cannot close FileOutputStream", e);;
         }
 
-
+        /*
+         * TODO korrektes schließen vom fos
+         */
 
       }
     };
 
-    logThread.start();
-
-
-
+    return logThread;
   }
 
 }

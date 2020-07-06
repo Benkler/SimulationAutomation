@@ -154,7 +154,7 @@ public class SimulationRestController {
    * @param simulationName
    * @return
    */
-  @RequestMapping(value = "/simulation/{simulationName}/results/{fileName}/file",
+  @RequestMapping(value = "/simulation/{simulationName}/results/{fileName}",
       method = RequestMethod.GET)
   public ResponseEntity<byte[]> getSimulationResultFile(
       @PathVariable(name = "simulationName") String simulationName,
@@ -238,10 +238,6 @@ public class SimulationRestController {
 
 
   }
-
-
-
-  // TODO Endpunkt für Datei
 
 
 
