@@ -98,6 +98,31 @@ public class SimulationLoader implements ISimulationLoader {
     return availableSimulations;
   }
 
+  /**
+   * Create Simulation-Object from metadata file (persisted on file system). </br>
+   * 
+   * 
+   * @param simulationName
+   * @return simulation OR null if not found
+   */
+  @Override
+  public Simulation loadSimulationFromMetadata(String simulationName) {
+
+    log.info("Trying to load metadata of simulation with name=" + simulationName);
+    String json = FileUtil
+        .loadFileAsString(SimulationPathFactory.getPathToSimulationMetadataFile(simulationName));
+
+    if (json == null) {
+      log.info("Could not load metadata for simulation with name=" + simulationName);
+      return null;
+    }
+
+    Gson gson = new Gson();
+    Simulation simulation = gson.fromJson(json, Simulation.class);
+    return simulation;
+  }
+
+
 
   /*
    * Clean up corrupt simulation

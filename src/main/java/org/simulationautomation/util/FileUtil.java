@@ -67,7 +67,7 @@ public class FileUtil {
       return null;
     }
 
-    return loadFile(path).toByteArray();
+    return stream.toByteArray();
 
   }
 
@@ -86,7 +86,7 @@ public class FileUtil {
       return null;
     }
 
-    return loadFile(path).toString();
+    return stream.toString();
   }
 
   private static ByteArrayOutputStream loadFile(String path) {

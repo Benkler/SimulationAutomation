@@ -93,8 +93,12 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
     simulation.getStatus().setStatus(simulationSatusCode);
     log.info("New status is: " + simulation.getStatus().toString());
 
-    // Update status with updateStatus() method does somehow not work
+    /*
+     * Update status with updateStatus() method does somehow not work. this needs a fix! We do not
+     * want to load status from file every time.
+     */
     // simulationCRDClient.updateStatus(simulation);
+    simulationCRDClient.createOrReplace(simulation);
 
 
 
@@ -130,6 +134,7 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
 
   @Override
   public SimulationStatus getSimulationStatus(String simulationName) {
+
     Simulation simulation = getSimulation(simulationName);
     if (simulation == null) {
       log.error("Could not retrieve simulation status for simulation with name= " + simulationName

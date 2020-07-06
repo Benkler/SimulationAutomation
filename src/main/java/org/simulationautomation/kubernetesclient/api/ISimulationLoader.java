@@ -23,6 +23,8 @@ public interface ISimulationLoader {
    */
   List<Simulation> loadAvailableSimulationsFromMetadata();
 
+  Simulation loadSimulationFromMetadata(String simulationName);
+
 
 
 }
