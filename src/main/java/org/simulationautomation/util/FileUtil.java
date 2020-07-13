@@ -120,10 +120,10 @@ public class FileUtil {
   public static boolean createFileFromString(String path, String content) {
 
 
-    File metadataFile = new File(path);
-    try (PrintWriter out = new PrintWriter(metadataFile);) {
+    File file = new File(path);
+    try (PrintWriter out = new PrintWriter(file);) {
 
-      metadataFile.createNewFile();
+      file.createNewFile();
       out.println(content);
       log.info("Successfully create file from string at path=" + path);
       return true;

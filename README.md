@@ -130,13 +130,18 @@ In the case of the simulation client, we have the following structure:
   * meta data file is updated whenever the simulation watcher captures an event that changes the status of the simulation
   * also used to restore simulations in case of a crash
 
-It is important to mention that a simulation pod cannot access the folder structure of another pod, not to mention the log file and metadata file of the accompanying simulation. 
+It is important to mention that a simulation pod cannot access the folder structure of another pod, not to mention the log file and metadata file of the accompanying simulation.  Altogether, this folder structure enables to structure the input and output of multiple simulations as well as their logs and metadata files. 
 
 ### Watcher for Pods and Simulation CRDs
 
+The Fabric-8-Client Framework provides a useful functionality called "Watcher".  With this, state changes of Simulation CRDs and Pods can be easily 
+
+* SimulationWatcher
+  * 
+
 ### Log Files
 
-### 
+### Startup Behaviour
 
 
 
