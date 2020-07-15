@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.google.gson.Gson;
 
 @RestController
 @Component
@@ -21,12 +22,15 @@ public class SimulationAutomationStatusController {
   ISimulationAutomationServiceProxy simulationAutomationServiceProxy;
 
   @GetMapping("/simulationautomation/simulations")
-  public ResponseEntity<List<String>> getSimulationStatus() {
+  public ResponseEntity<String> getSimulationStatus() {
     log.info("Rest Endpoint triggered: Query all active simulations");
-    List<String> existingSimulations = simulationAutomationServiceProxy.getNamesOfExistingSimulations();
+    List<SimulationVO> existingSimulations =
+        simulationAutomationServiceProxy.getExistingSimulations();
+    Gson gson = new Gson();
+    String responseBody = gson.toJson(existingSimulations);
 
     log.info("Following simulations exist: " + existingSimulations.toString());
-    return new ResponseEntity<List<String>>(existingSimulations, HttpStatus.OK);
+    return new ResponseEntity<String>(responseBody, HttpStatus.OK);
 
   }
 

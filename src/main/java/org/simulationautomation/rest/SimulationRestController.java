@@ -4,7 +4,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceProxy;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
-import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +13,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @Component
@@ -37,27 +39,61 @@ public class SimulationRestController {
    * @return
    * @throws URISyntaxException
    */
-  @GetMapping("/simulation/create")
-  public ResponseEntity<String> createSimulation() throws URISyntaxException {
+  @PostMapping("/simulation/create")
+  public ResponseEntity<String> createSimulation(@RequestParam("file") MultipartFile file)
+      throws URISyntaxException {
 
     log.info("Rest Endpoint triggered: Create simulation");
 
+    log.info("Content Type: " + file.getContentType());
+    log.info("Original File name: " + file.getOriginalFilename());
+    log.info("File name: " + file.getName());
+    // file.getContentType()
 
     Simulation simulation;
-    try {
-      simulation = simulationServiceProxy.createSimulation();
-    } catch (SimulationCreationException e) {
-      log.info("Bad Request: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Could not create simulation. Error Message: \n" + e.getMessage());
-    }
-    String simulationName = simulation.getMetadata().getName();
-    log.info("Rest Response: Simulation accepted with name = " + simulationName);
+    // try {
+    // simulation = simulationServiceProxy.createSimulation();
+    // } catch (SimulationCreationException e) {
+    // log.info("Bad Request: " + e.getMessage());
+    // return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+    // .body("Could not create simulation. Error Message: \n" + e.getMessage());
+    // }
+    // String simulationName = simulation.getMetadata().getName();
+    // log.info("Rest Response: Simulation accepted with name = " + simulationName);
     HttpHeaders headers = new HttpHeaders();
-    headers.setLocation(new URI("/simulation/" + simulationName + "/status"));
+    // headers.setLocation(new URI("/simulation/" + simulationName + "/status"));
+    headers.setLocation(new URI("/simulation/" + "bla" + "/status"));
     return new ResponseEntity<String>(headers, HttpStatus.ACCEPTED);
 
   }
+
+  // /**
+  // * Rest-Endpoint to trigger simulation with give simulation data.
+  // *
+  // * @return
+  // * @throws URISyntaxException
+  // */
+  // @GetMapping("/simulation/create")
+  // public ResponseEntity<String> createSimulation() throws URISyntaxException {
+  //
+  // log.info("Rest Endpoint triggered: Create simulation");
+  //
+  //
+  // Simulation simulation;
+  // try {
+  // simulation = simulationServiceProxy.createSimulation();
+  // } catch (SimulationCreationException e) {
+  // log.info("Bad Request: " + e.getMessage());
+  // return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+  // .body("Could not create simulation. Error Message: \n" + e.getMessage());
+  // }
+  // String simulationName = simulation.getMetadata().getName();
+  // log.info("Rest Response: Simulation accepted with name = " + simulationName);
+  // HttpHeaders headers = new HttpHeaders();
+  // headers.setLocation(new URI("/simulation/" + simulationName + "/status"));
+  // return new ResponseEntity<String>(headers, HttpStatus.ACCEPTED);
+  //
+  // }
 
   /**
    * Rest Endpoint that provides information about the current status of a simulation specified by
