@@ -110,11 +110,12 @@ public class SimulationOperator implements ISimulationOperator {
    */
   // TODO further parameters necessary
   @Override
-  public Simulation createNewSimulation() throws SimulationCreationException {
+  public Simulation createNewSimulation(byte[] zippedExperimentData)
+      throws SimulationCreationException {
     log.info("Trying to prepare simulation.");
 
     // Create and persist simulation
-    Simulation createdSimulation = createSimulationCR();
+    Simulation createdSimulation = createSimulationCR(zippedExperimentData);
     Simulation persistedSimulation = persistSimulation(createdSimulation);
 
 
@@ -169,9 +170,10 @@ public class SimulationOperator implements ISimulationOperator {
     return simulationPodFactory.createSimulationPod(simulation);
   }
 
-  private Simulation createSimulationCR() throws SimulationCreationException {
+  private Simulation createSimulationCR(byte[] zippedExperimentData)
+      throws SimulationCreationException {
     log.info("Trying to create Simulation");
-    Simulation simulation = simulationFactory.createAndPrepareSimulation();
+    Simulation simulation = simulationFactory.createAndPrepareSimulation(zippedExperimentData);
     log.info("Successfully created simulation with name=" + simulation.getMetadata().getName());
     return simulation;
   }

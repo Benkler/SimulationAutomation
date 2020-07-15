@@ -14,6 +14,10 @@ public class SimulationPathFactory {
     return SimulationPathFactory.INSTANCE;
   }
 
+  public static String getPathToSimulationExperimentFileInContainer(String experimentFileName) {
+    return SimulationProperties.PALLADIO_IMAGE_INPUT_MOUNT_PATH + "/" + experimentFileName;
+  }
+
   /**
    * 
    * @param simulationName
@@ -61,6 +65,12 @@ public class SimulationPathFactory {
   public static String getPathToInputFolderOfSimulation(String simulationName) {
     return SimulationProperties.SIMULATION_BASE_PATH + "/" + simulationName + "/"
         + SimulationProperties.SIMULATION_INPUT_FOLDER_NAME;
+  }
+
+
+  public static String getPathToFileInInputFolderOfSimulation(String simulationName,
+      String fileName) {
+    return getPathToInputFolderOfSimulation(simulationName) + "/" + fileName;
   }
 
   /**

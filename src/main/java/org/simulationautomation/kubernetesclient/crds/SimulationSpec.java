@@ -15,10 +15,26 @@ public class SimulationSpec implements KubernetesResource {
 
   private static final long serialVersionUID = -424650618584495148L;
 
+  private String simulationFileName;
+
+
+
   @Override
   // TODO adapt
   public String toString() {
-    return "SimulationSpec{}";
+    return "SimulationSpec{" + "SimulationFileName= " + simulationFileName + "\n" + "}";
+  }
+
+
+
+  public String getSimulationFileName() {
+    return simulationFileName;
+  }
+
+
+
+  public void setSimulationFileName(String simulationFileName) {
+    this.simulationFileName = simulationFileName;
   }
 
 

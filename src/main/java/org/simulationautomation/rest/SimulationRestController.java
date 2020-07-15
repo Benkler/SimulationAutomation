@@ -1,9 +1,11 @@
 package org.simulationautomation.rest;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceProxy;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
+import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,24 +50,27 @@ public class SimulationRestController {
     log.info("Content Type: " + file.getContentType());
     log.info("Original File name: " + file.getOriginalFilename());
     log.info("File name: " + file.getName());
-    // file.getContentType()
+
 
     Simulation simulation;
-    // try {
-    // simulation = simulationServiceProxy.createSimulation();
-    // } catch (SimulationCreationException e) {
-    // log.info("Bad Request: " + e.getMessage());
-    // return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-    // .body("Could not create simulation. Error Message: \n" + e.getMessage());
-    // }
-    // String simulationName = simulation.getMetadata().getName();
-    // log.info("Rest Response: Simulation accepted with name = " + simulationName);
+    try {
+      byte[] zippedExperimentData = file.getBytes();
+      simulation = simulationServiceProxy.createSimulation(zippedExperimentData);
+    } catch (SimulationCreationException | IOException e) {
+      log.info("Bad Request: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body("Could not create simulation. Error Message: \n" + e.getMessage());
+    }
+    String simulationName = simulation.getMetadata().getName();
+    log.info("Rest Response: Simulation accepted with name = " + simulationName);
     HttpHeaders headers = new HttpHeaders();
-    // headers.setLocation(new URI("/simulation/" + simulationName + "/status"));
-    headers.setLocation(new URI("/simulation/" + "bla" + "/status"));
+    headers.setLocation(new URI("/simulation/" + simulationName + "/status"));
+    // headers.setLocation(new URI("/simulation/" + "bla" + "/status"));
     return new ResponseEntity<String>(headers, HttpStatus.ACCEPTED);
 
   }
+
+
 
   // /**
   // * Rest-Endpoint to trigger simulation with give simulation data.

@@ -20,10 +20,11 @@ public interface ISimulationServiceProxy {
 
   byte[] getSimulationLog(String simulationName);
 
-  Simulation createSimulation() throws SimulationCreationException;
+  Simulation createSimulation(byte[] zippedExperimentData) throws SimulationCreationException;
 
   List<Simulation> getSimulations();
 
   byte[] getSimulationResultFile(String simulationName, String fileName);
+
 
 }

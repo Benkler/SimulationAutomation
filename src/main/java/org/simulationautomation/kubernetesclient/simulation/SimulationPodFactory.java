@@ -25,6 +25,7 @@ public class SimulationPodFactory implements ISimulationPodFactory {
   private static final String NFS_INPUT_NAME = "input-nfs";
   private static final String NFS_OUTPUT_NAME = "output-nfs";
   private static final String PALLADIO_CONTAINER_NAME = "palladiosimulation";
+  private static final String GENERATED_EXPERIMENTS_FILE_NAME = "Generated.experiments";
 
   private static final Logger log = LoggerFactory.getLogger(SimulationPodFactory.class);
 
@@ -79,14 +80,33 @@ public class SimulationPodFactory implements ISimulationPodFactory {
 
     List<String> args = new ArrayList<>();
 
-    // TODO adapt Folder Structure
-    // TODO adapt Simulation Type
-    args.add("/usr/ExperimentData/model/Experiments/Scalability.experiments");
-    args.add("/usr/ExperimentData/model/Experiments/Generated.experiments");
+    // Get path to .experiments file
+    String pathToExperimentsFile = SimulationPathFactory
+        .getPathToSimulationExperimentFileInContainer(simulation.getSpec().getSimulationFileName());
+    String pathToGeneratedFile = createPathToGeneratedFile(pathToExperimentsFile);
+    log.info("Path argument for experiments file= " + pathToExperimentsFile);
+    log.info("Path argument for generated file= " + pathToGeneratedFile);
+    args.add(pathToExperimentsFile);
+    args.add(pathToGeneratedFile);
     return new ContainerBuilder().withName(PALLADIO_CONTAINER_NAME)
         .withImage(SimulationProperties.PALLADIO_IMAGE).withImagePullPolicy(IMAGE_PULL_POLICY)
         .withVolumeMounts(inputVolumeMount, outputVolumeMount).addAllToCommand(commands)
         .addAllToArgs(args).build();
+  }
+
+  /*
+   * Generated.experiments file needs to be created in same directory than actual .experiments File
+   * Example: /dir/temp.experiments -> /dir/Generated.experiments
+   */
+  private String createPathToGeneratedFile(String pathToExperimentsFile) {
+
+    int index = pathToExperimentsFile.lastIndexOf("/");
+    if (index == -1) {
+      return GENERATED_EXPERIMENTS_FILE_NAME;
+    } else {
+      return pathToExperimentsFile.substring(0, index) + "/" + GENERATED_EXPERIMENTS_FILE_NAME;
+    }
+
   }
 
   /**

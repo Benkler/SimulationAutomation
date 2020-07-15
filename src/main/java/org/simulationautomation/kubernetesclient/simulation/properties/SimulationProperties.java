@@ -19,6 +19,7 @@ public final class SimulationProperties {
   public static final String SIMULATION_NAMESPACE = "simulations";
   public static final String SIMULATION_LABEL = "sim";
   public static final int SIMULATION_DURATION_MAX_MIN = 10;
+  public static final String SIMULATION_EXPERIMENT_EXTENSION = ".experiments";
 
   /*
    * Properties used to manage folder structure
@@ -47,5 +48,6 @@ public final class SimulationProperties {
   public static final String PALLADIO_IMAGE_ENTRY_SCRIPT_PATH = "/usr/RunExperimentAutomation.sh";
   public static final String PALLADIO_IMAGE_INPUT_MOUNT_PATH = "/usr/ExperimentData";
   public static final String PALLADIO_IMAGE_OUTPUT_MOUNT_PATH = "/result";
+
 }
 

@@ -18,11 +18,13 @@ public interface ISimulationOperator {
   /**
    * Create a simulation custom resource with given name in simulation namespace. </br>
    * 
+   * @param zippedExperimentData
+   * 
    * @param name
    * @throws SimulationCreationException
    */
   // TODO further parameters necessary
-  Simulation createNewSimulation() throws SimulationCreationException;
+  Simulation createNewSimulation(byte[] zippedExperimentData) throws SimulationCreationException;
 
   /**
    * Find Pod for Simulation with given name. </br>
