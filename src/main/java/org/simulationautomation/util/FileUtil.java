@@ -18,14 +18,25 @@ import org.slf4j.LoggerFactory;
 public class FileUtil {
 
   private static final Logger log = LoggerFactory.getLogger(FileUtil.class);
+  private static FileUtil INSTANCE;
 
+  private FileUtil() {
+
+  }
+
+  public static FileUtil getInstance() {
+    if (INSTANCE == null) {
+      INSTANCE = new FileUtil();
+    }
+    return INSTANCE;
+  }
 
   /**
    * Delete file at specified path
    * 
    * @param path
    */
-  public static void deleteFile(String path) {
+  public void deleteFile(String path) {
     log.info("Trying to delete file at path=" + path);
 
     try {
@@ -42,7 +53,7 @@ public class FileUtil {
    * 
    * @param path
    */
-  public static void deleteDirectory(String pathToSimulation) {
+  public void deleteDirectory(String pathToSimulation) {
     log.info("Trying to delete directory at path=" + pathToSimulation);
     try {
       FileUtils.deleteDirectory(new File(pathToSimulation));
@@ -59,7 +70,7 @@ public class FileUtil {
    * @param path of the file
    * @return
    */
-  public static byte[] loadFileAsByteStream(String path) {
+  public byte[] loadFileAsByteStream(String path) {
 
     ByteArrayOutputStream stream = loadFile(path);
 
@@ -77,7 +88,7 @@ public class FileUtil {
    * @param path of the file
    * @return
    */
-  public static String loadFileAsString(String path) {
+  public String loadFileAsString(String path) {
 
 
     ByteArrayOutputStream stream = loadFile(path);
@@ -89,7 +100,7 @@ public class FileUtil {
     return stream.toString();
   }
 
-  private static ByteArrayOutputStream loadFile(String path) {
+  private ByteArrayOutputStream loadFile(String path) {
     log.info("Load file at path=" + path);
 
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -117,7 +128,7 @@ public class FileUtil {
    * @param path
    * @param content
    */
-  public static boolean createFileFromString(String path, String content) {
+  public boolean createFileFromString(String path, String content) {
 
 
     File file = new File(path);
@@ -145,7 +156,7 @@ public class FileUtil {
    * @param fileName
    * @return
    */
-  public static byte[] loadFileFromDirectoryRecursively(String baseDirectoryPath, String fileName) {
+  public byte[] loadFileFromDirectoryRecursively(String baseDirectoryPath, String fileName) {
     Path start = Paths.get(baseDirectoryPath);
     try (Stream<Path> stream = Files.walk(start, Integer.MAX_VALUE)) {
       List<String> files = stream.filter(Files::isRegularFile).map(String::valueOf)

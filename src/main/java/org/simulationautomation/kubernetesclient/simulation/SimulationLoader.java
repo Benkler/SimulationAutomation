@@ -10,10 +10,10 @@ import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationPathFactory;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationProperties;
 import org.simulationautomation.util.FileUtil;
+import org.simulationautomation.util.JSONUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import com.google.gson.Gson;
 
 /**
  * This class loads and saves Simulation objects from/to persistent file system. </br>
@@ -43,12 +43,12 @@ public class SimulationLoader implements ISimulationLoader {
   public void updateSimulationMetadata(Simulation simulation) {
     String simulationName = simulation.getMetadata().getName();
     log.info("Trying to update metadata of simulation with name=" + simulationName);
-    Gson gson = new Gson();
-    String json = gson.toJson(simulation);
+
+    String json = JSONUtil.getInstance().toJson(simulation);
     String pathToMetadataFile =
         SimulationPathFactory.getPathToSimulationMetadataFile(simulationName);
 
-    if (FileUtil.createFileFromString(pathToMetadataFile, json)) {
+    if (FileUtil.getInstance().createFileFromString(pathToMetadataFile, json)) {
       log.info("Successfully updated metadata of simulation with name=" + simulationName);
     } else {
       log.info("Could not to update metadata of simulation with name=" + simulationName);
@@ -78,19 +78,19 @@ public class SimulationLoader implements ISimulationLoader {
     });
 
 
-    Gson gson = new Gson();
 
     for (String simulationName : simulationNames) {
 
       log.info("Recover simulation from metadata with name=" + simulationName);
       String pathToSimulationMetaData =
           SimulationPathFactory.getPathToSimulationMetadataFile(simulationName);
-      String simulationAsJson = FileUtil.loadFileAsString(pathToSimulationMetaData);
+      String simulationAsJson = FileUtil.getInstance().loadFileAsString(pathToSimulationMetaData);
       if (simulationAsJson == null) {
         log.error("Could not recover simulation from metadata with name=" + simulationName);
         continue;
       }
-      Simulation recoveredSimulation = gson.fromJson(simulationAsJson, Simulation.class);
+      Simulation recoveredSimulation =
+          JSONUtil.getInstance().fromJson(simulationAsJson, Simulation.class);
       availableSimulations.add(recoveredSimulation);
 
     }
@@ -109,7 +109,7 @@ public class SimulationLoader implements ISimulationLoader {
   public Simulation loadSimulationFromMetadata(String simulationName) {
 
     log.info("Trying to load metadata of simulation with name=" + simulationName);
-    String json = FileUtil
+    String json = FileUtil.getInstance()
         .loadFileAsString(SimulationPathFactory.getPathToSimulationMetadataFile(simulationName));
 
     if (json == null) {
@@ -117,8 +117,7 @@ public class SimulationLoader implements ISimulationLoader {
       return null;
     }
 
-    Gson gson = new Gson();
-    Simulation simulation = gson.fromJson(json, Simulation.class);
+    Simulation simulation = JSONUtil.getInstance().fromJson(json, Simulation.class);
     return simulation;
   }
 
@@ -130,7 +129,7 @@ public class SimulationLoader implements ISimulationLoader {
   private void cleanUpSimulations() {
     log.info("Clean up simulations");
     File file = new File(SimulationProperties.SIMULATION_BASE_PATH);
-    Gson gson = new Gson();
+
     // dir name is equal to simulation name!
     String[] simulationNames = file.list(new FilenameFilter() {
       @Override
@@ -142,23 +141,23 @@ public class SimulationLoader implements ISimulationLoader {
     for (String simulationName : simulationNames) {
       String pathToSimulationMetaData =
           SimulationPathFactory.getPathToSimulationMetadataFile(simulationName);
-      String simulationAsJson = FileUtil.loadFileAsString(pathToSimulationMetaData);
+      String simulationAsJson = FileUtil.getInstance().loadFileAsString(pathToSimulationMetaData);
       String pathToSimulation = SimulationPathFactory.getPathToSimulationFolder(simulationName);
       // Delete if no metadata available
       if (simulationAsJson == null) {
         log.info("Simulation with name= " + simulationName
             + " has no metadata and will be deleted from file system");
-        FileUtil.deleteDirectory(pathToSimulation);
+        FileUtil.getInstance().deleteDirectory(pathToSimulation);
       }
 
-      Simulation simulation = gson.fromJson(simulationAsJson, Simulation.class);
+      Simulation simulation = JSONUtil.getInstance().fromJson(simulationAsJson, Simulation.class);
       SimulationStatusCode status = simulation.getStatus().getStatusCode();
 
 
       if (!validStatusForRestoring.contains(status)) {
         log.info("Simulation with name= " + simulationName + " has invalid status= " + status
             + " and will be deleted from file system");
-        FileUtil.deleteDirectory(pathToSimulation);
+        FileUtil.getInstance().deleteDirectory(pathToSimulation);
       }
 
       // TODO any other criteria to delete simulation? What about log file?

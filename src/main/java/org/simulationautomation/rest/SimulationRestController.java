@@ -1,11 +1,11 @@
 package org.simulationautomation.rest;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceProxy;
-import org.simulationautomation.kubernetesclient.crds.Simulation;
-import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
+import org.simulationautomation.kubernetesclient.exceptions.RestClientException;
+import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
+import org.simulationautomation.util.JSONUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,65 +40,27 @@ public class SimulationRestController {
    * 
    * @return
    * @throws URISyntaxException
+   * @throws RestClientException
    */
   @PostMapping("/simulation/create")
-  public ResponseEntity<String> createSimulation(@RequestParam("file") MultipartFile file)
-      throws URISyntaxException {
+  public ResponseEntity<?> createSimulation(@RequestParam("file") MultipartFile file)
+      throws URISyntaxException, RestClientException {
 
     log.info("Rest Endpoint triggered: Create simulation");
 
-    log.info("Content Type: " + file.getContentType());
-    log.info("Original File name: " + file.getOriginalFilename());
-    log.info("File name: " + file.getName());
+    SimulationVO simulation = simulationServiceProxy.createSimulation(file);
+    String simulationName = simulation.getSimulationName();
+    String content = JSONUtil.getInstance().toJson(simulation);
 
-
-    Simulation simulation;
-    try {
-      byte[] zippedExperimentData = file.getBytes();
-      simulation = simulationServiceProxy.createSimulation(zippedExperimentData);
-    } catch (SimulationCreationException | IOException e) {
-      log.info("Bad Request: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Could not create simulation. Error Message: \n" + e.getMessage());
-    }
-    String simulationName = simulation.getMetadata().getName();
     log.info("Rest Response: Simulation accepted with name = " + simulationName);
     HttpHeaders headers = new HttpHeaders();
     headers.setLocation(new URI("/simulation/" + simulationName + "/status"));
-    // headers.setLocation(new URI("/simulation/" + "bla" + "/status"));
-    return new ResponseEntity<String>(headers, HttpStatus.ACCEPTED);
+
+    return new ResponseEntity<>(content, headers, HttpStatus.ACCEPTED);
 
   }
 
 
-
-  // /**
-  // * Rest-Endpoint to trigger simulation with give simulation data.
-  // *
-  // * @return
-  // * @throws URISyntaxException
-  // */
-  // @GetMapping("/simulation/create")
-  // public ResponseEntity<String> createSimulation() throws URISyntaxException {
-  //
-  // log.info("Rest Endpoint triggered: Create simulation");
-  //
-  //
-  // Simulation simulation;
-  // try {
-  // simulation = simulationServiceProxy.createSimulation();
-  // } catch (SimulationCreationException e) {
-  // log.info("Bad Request: " + e.getMessage());
-  // return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-  // .body("Could not create simulation. Error Message: \n" + e.getMessage());
-  // }
-  // String simulationName = simulation.getMetadata().getName();
-  // log.info("Rest Response: Simulation accepted with name = " + simulationName);
-  // HttpHeaders headers = new HttpHeaders();
-  // headers.setLocation(new URI("/simulation/" + simulationName + "/status"));
-  // return new ResponseEntity<String>(headers, HttpStatus.ACCEPTED);
-  //
-  // }
 
   /**
    * Rest Endpoint that provides information about the current status of a simulation specified by
@@ -110,29 +72,27 @@ public class SimulationRestController {
    * @param simulationName
    * @return
    * @throws URISyntaxException
+   * @throws RestClientException
    */
   @GetMapping("/simulation/{simulationName}/status")
-  public ResponseEntity<String> getSimulationStatus(
-      @PathVariable(name = "simulationName") String simulationName) throws URISyntaxException {
+  public ResponseEntity<?> getSimulationStatus(
+      @PathVariable(name = "simulationName") String simulationName)
+      throws URISyntaxException, RestClientException {
 
     log.info("Rest Endpoint triggered: Get status of simulation with name=" + simulationName);
 
-    if (!simulationServiceProxy.doesSimulationExist(simulationName)) {
-      log.info("Rest Response: Simulation with name=" + simulationName + " does not exist");
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Simulation with name=" + simulationName + " does not exist");
-    }
+    SimulationStatusCode statusCode = simulationServiceProxy.getSimulationStatus(simulationName);
 
-    if (simulationServiceProxy.isSimulationFinished(simulationName)) {
+    if (statusCode == SimulationStatusCode.SUCCEEDED) {
       log.info("Rest Response: Simulation with name=" + simulationName + " is finished");
       HttpHeaders headers = new HttpHeaders();
       headers.setLocation(new URI("/simulation/" + simulationName + "/results"));
-      return new ResponseEntity<String>(headers, HttpStatus.SEE_OTHER);
+      return new ResponseEntity<>(statusCode.toString(), headers, HttpStatus.SEE_OTHER);
 
     } else {
-      // Do nothing
+      // Do nothing, as simulation is still running
       log.info("Rest Response: Simulation with name=" + simulationName + " is not yet finished");
-      return ResponseEntity.ok().build();
+      return new ResponseEntity<>(statusCode.toString(), HttpStatus.OK);
     }
 
   }
@@ -144,31 +104,18 @@ public class SimulationRestController {
    * 
    * @param simulationName
    * @return
+   * @throws RestClientException
    */
   @RequestMapping(value = "/simulation/{simulationName}/results", method = RequestMethod.GET)
   public ResponseEntity<byte[]> getSimulationResults(
-      @PathVariable(name = "simulationName") String simulationName) {
+      @PathVariable(name = "simulationName") String simulationName) throws RestClientException {
 
     log.info(
         "Rest Endpoint triggered: Get simulation result of simulation with name=" + simulationName);
 
-    // Check if simulation exists
-    if (!simulationServiceProxy.doesSimulationExist(simulationName)) {
-      String response = "Simulation with name=" + simulationName + " does not exist";
-      log.info("Rest Response: " + response);
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
-    }
 
-    // Check if simulation is finished
-    if (!simulationServiceProxy.isSimulationFinished(simulationName)) {
-      String response = "Simulation with name=" + simulationName + " is not yet finished";
-      log.info("Rest Response: " + response);
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
-    }
-
-    // Simulation finished
+    // Includes check if simulation exists and is finished
     byte[] contents = simulationServiceProxy.getSimulationResults(simulationName);
-
     if (contents == null) {
       String response =
           "Simulation with name=" + simulationName + " encountered an error while loading zip";
@@ -194,48 +141,27 @@ public class SimulationRestController {
    * 
    * @param simulationName
    * @return
+   * @throws RestClientException
    */
   @RequestMapping(value = "/simulation/{simulationName}/results/{fileName}",
       method = RequestMethod.GET)
-  public ResponseEntity<byte[]> getSimulationResultFile(
+  public ResponseEntity<?> getSimulationResultFile(
       @PathVariable(name = "simulationName") String simulationName,
-      @PathVariable(name = "fileName") String fileName) {
+      @PathVariable(name = "fileName") String fileName) throws RestClientException {
 
     log.info("Rest Endpoint triggered: Get file with name=" + fileName
         + " of results for simulation with name=" + simulationName);
 
-    // Check if simulation exists
-    if (!simulationServiceProxy.doesSimulationExist(simulationName)) {
-      String response = "Simulation with name=" + simulationName + " does not exist";
-      log.info("Rest Response: " + response);
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
-    }
-
-    // Check if simulation is finished
-    if (!simulationServiceProxy.isSimulationFinished(simulationName)) {
-      String response = "Simulation with name=" + simulationName + " is not yet finished";
-      log.info("Rest Response: " + response);
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
-    }
-
     // Simulation finished
     byte[] contents = simulationServiceProxy.getSimulationResultFile(simulationName, fileName);
-    if (contents == null) {
-      String response =
-          "Simulation with name=" + simulationName + " does not have a file with name=" + fileName;
-      log.info("Rest Response: " + response);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response.getBytes());
+    log.info("Successfully retrieved file with name=" + fileName + " for simulation with name="
+        + simulationName);
 
-    } else {
+    HttpHeaders headers = new HttpHeaders();
+    headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+    headers.add(HttpHeaders.CONTENT_TYPE, "text/plain");
 
-      HttpHeaders headers = new HttpHeaders();
-      headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
-      headers.add(HttpHeaders.CONTENT_TYPE, "text/plain");
-
-      log.info("Successfully retrieved file with name=" + fileName + " for simulation with name="
-          + simulationName);
-      return new ResponseEntity<byte[]>(contents, headers, HttpStatus.OK);
-    }
+    return new ResponseEntity<>(contents, headers, HttpStatus.OK);
 
 
 
@@ -244,27 +170,13 @@ public class SimulationRestController {
 
 
   @RequestMapping(value = "/simulation/{simulationName}/log", method = RequestMethod.GET)
-  public ResponseEntity<byte[]> getSimulationLog(
-      @PathVariable(name = "simulationName") String simulationName) {
+  public ResponseEntity<?> getSimulationLog(
+      @PathVariable(name = "simulationName") String simulationName) throws RestClientException {
 
     log.info(
         "Rest Endpoint triggered: Get simulation result of simulation with name=" + simulationName);
 
-    // Check if simulation exists
-    if (!simulationServiceProxy.doesSimulationExist(simulationName)) {
-      String response = "Simulation with name=" + simulationName + " does not exist";
-      log.info("Rest Response: " + response);
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
-    }
-
     byte[] simulationLog = simulationServiceProxy.getSimulationLog(simulationName);
-    if (simulationLog == null) {
-      String response = "Log for Simulation with name=" + simulationName + " does not exist";
-      log.info("Rest Response: " + response);
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBytes());
-    }
-
-
 
     // Logs successfully retrieved
     log.info("Rest Response: Query logs for Simulation with name=" + simulationName);
@@ -274,7 +186,7 @@ public class SimulationRestController {
         "attachment; filename=" + "logs_" + simulationName);
     headers.add(HttpHeaders.CONTENT_TYPE, "text/plain");
 
-    return new ResponseEntity<byte[]>(simulationLog, headers, HttpStatus.OK);
+    return new ResponseEntity<>(simulationLog, headers, HttpStatus.OK);
 
 
 

@@ -1,19 +1,24 @@
 package org.simulationautomation.kubernetesclient.simulation;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceProxy;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
-import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
+import org.simulationautomation.kubernetesclient.exceptions.RestClientException;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationPathFactory;
+import org.simulationautomation.rest.SimulationVO;
 import org.simulationautomation.util.FileUtil;
 import org.simulationautomation.util.ZipUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 
 /**
  * Service class as Proxy between REST-interface and actual backend for operations on specific
@@ -37,45 +42,76 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
 
 
   @Override
-  public byte[] getSimulationLog(String simulationName) {
+  public SimulationVO createSimulation(MultipartFile file) throws RestClientException {
+    log.info("Trying to create simulation from file");
+
+    byte[] zippedExperimentData;
+    try {
+      zippedExperimentData = file.getBytes();
+    } catch (IOException e1) {
+      log.error("Error while creating simulation. Error Code=" + e1.getMessage());
+      throw new RestClientException("Error while creating Simulation");
+    }
+
+    try {
+      return SimulationVO.toSimulationVO(operator.createNewSimulation(zippedExperimentData));
+    } catch (SimulationCreationException e) {
+      log.error("Error while creating simulation. Error Message: " + e.getMessage());
+
+      throw new RestClientException("Error while creating Simulation");
+    }
+  }
+
+  @Override
+  public byte[] getSimulationLog(String simulationName) throws RestClientException {
+
+    checkIfSimulationExists(simulationName);
 
     log.info("Trying to get log for simulation with name=" + simulationName);
     String pathToLogFile = SimulationPathFactory.getPathToSimulationLogFile(simulationName);
 
-    byte[] logArray = FileUtil.loadFileAsByteStream(pathToLogFile);
+    byte[] logAsByteArray = FileUtil.getInstance().loadFileAsByteStream(pathToLogFile);
 
-    if (logArray == null) {
+    if (logAsByteArray == null) {
       log.info("Could not get log for simulation with name=" + simulationName);
-      return null;
+      throw new RestClientException(
+          "Log for simulation with name= " + simulationName + " does not exists");
     }
 
-    return logArray;
+    return logAsByteArray;
 
   }
 
+  /**
+   * Get status of simulation.
+   * 
+   * @param simulationName
+   * @return StatusCode
+   * @throws RestClientException
+   */
   @Override
-  public boolean isSimulationFinished(String simulationName) {
+  public SimulationStatusCode getSimulationStatus(String simulationName)
+      throws RestClientException {
+    checkIfSimulationExists(simulationName);
 
-    SimulationStatus status = simulationServiceRegistry.getSimulationStatus(simulationName);
 
-    return status == null ? false : status.getStatusCode().equals(SimulationStatusCode.SUCCEEDED);
-
+    return simulationServiceRegistry.getSimulationStatus(simulationName).getStatusCode();
   }
 
 
-  @Override
-  public boolean doesSimulationExist(String simulationName) {
-    return simulationServiceRegistry.getSimulation(simulationName) != null;
-  }
 
   /**
    * Get zipped simulation results as byte array
    * 
    * @param simulationName
    * @return
+   * @throws RestClientException
    */
   @Override
-  public byte[] getSimulationResults(String simulationName) {
+  public byte[] getSimulationResults(String simulationName) throws RestClientException {
+
+    checkIfSimulationExists(simulationName);
+    checkIfSimulationIsFinished(simulationName);
 
     log.info("Get simulation results for simulation with name=" + simulationName);
     String pathToOutputFolder =
@@ -92,8 +128,8 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
       return null;
     }
 
-    byte[] zipAsByteStream = FileUtil.loadFileAsByteStream(zipPath);
-    FileUtil.deleteFile(zipPath);
+    byte[] zipAsByteStream = FileUtil.getInstance().loadFileAsByteStream(zipPath);
+    FileUtil.getInstance().deleteFile(zipPath);
 
 
 
@@ -101,27 +137,62 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
   }
 
   @Override
-  public byte[] getSimulationResultFile(String simulationName, String fileName) {
+  public byte[] getSimulationResultFile(String simulationName, String fileName)
+      throws RestClientException {
+    checkIfSimulationExists(simulationName);
+    checkIfSimulationIsFinished(simulationName);
     log.info(
         "Get file with name=" + fileName + " of result for simulation with name=" + simulationName);
 
     String simulationBasePath =
         SimulationPathFactory.getPathToOutputFolderOfSimulation(simulationName);
 
-    return FileUtil.loadFileFromDirectoryRecursively(simulationBasePath, fileName);
+    byte[] resultFile =
+        FileUtil.getInstance().loadFileFromDirectoryRecursively(simulationBasePath, fileName);
+
+    if (resultFile == null) {
+      throw new RestClientException(
+          "Simulation with name=" + simulationName + " does not have a file with name=" + fileName);
+    }
+
+    return resultFile;
 
 
   }
 
   @Override
-  public Simulation createSimulation(byte[] zippedExperimentData)
-      throws SimulationCreationException {
-    return operator.createNewSimulation(zippedExperimentData);
+  public List<SimulationVO> getSimulations() {
+    return simulationServiceRegistry.getSimulations().stream().map(SimulationVO::toSimulationVO)
+        .collect(Collectors.toList());
   }
 
-  @Override
-  public List<Simulation> getSimulations() {
-    return simulationServiceRegistry.getSimulations();
+  private boolean isSimulationFinished(String simulationName) {
+
+    SimulationStatus status = simulationServiceRegistry.getSimulationStatus(simulationName);
+
+    return status == null ? false : status.getStatusCode().equals(SimulationStatusCode.SUCCEEDED);
+
+  }
+
+  private void checkIfSimulationIsFinished(String simulationName) throws RestClientException {
+    if (!isSimulationFinished(simulationName)) {
+      throw new RestClientException(
+          "Simulation with name= " + simulationName + " is not yet finished");
+    }
+
+
+  }
+
+
+
+  private boolean doesSimulationExist(String simulationName) {
+    return simulationServiceRegistry.getSimulation(simulationName) != null;
+  }
+
+  private void checkIfSimulationExists(String simulationName) throws RestClientException {
+    if (!doesSimulationExist(simulationName)) {
+      throw new RestClientException("Simulation with name= " + simulationName + " does not exist");
+    }
   }
 
 

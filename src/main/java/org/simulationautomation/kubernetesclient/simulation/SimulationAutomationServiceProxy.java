@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
- * Service class as Proxy between REST-interface and actual backend for operations concerning the
+ * Service class as Proxy between REST-interface and actual Backend for operations concerning the
  * simulation automation application.
  * 
  * @author Niko Benkler

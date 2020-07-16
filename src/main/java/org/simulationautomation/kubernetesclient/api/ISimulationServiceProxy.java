@@ -1,30 +1,33 @@
 package org.simulationautomation.kubernetesclient.api;
 
 import java.util.List;
-import org.simulationautomation.kubernetesclient.crds.Simulation;
-import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
+import org.simulationautomation.kubernetesclient.exceptions.RestClientException;
+import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
+import org.simulationautomation.rest.SimulationVO;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface ISimulationServiceProxy {
 
-  boolean isSimulationFinished(String simulationName);
 
-  boolean doesSimulationExist(String simulationName);
 
   /**
    * Get zipped simulation results as byte array
    * 
    * @param simulationName
    * @return
+   * @throws RestClientException
    */
-  byte[] getSimulationResults(String simulationName);
+  byte[] getSimulationResults(String simulationName) throws RestClientException;
 
-  byte[] getSimulationLog(String simulationName);
+  byte[] getSimulationLog(String simulationName) throws RestClientException;
 
-  Simulation createSimulation(byte[] zippedExperimentData) throws SimulationCreationException;
+  SimulationVO createSimulation(MultipartFile file) throws RestClientException;
 
-  List<Simulation> getSimulations();
+  List<SimulationVO> getSimulations();
 
-  byte[] getSimulationResultFile(String simulationName, String fileName);
+  byte[] getSimulationResultFile(String simulationName, String fileName) throws RestClientException;
+
+  SimulationStatusCode getSimulationStatus(String simulationName) throws RestClientException;
 
 
 }
