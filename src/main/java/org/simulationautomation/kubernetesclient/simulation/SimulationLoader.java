@@ -48,7 +48,7 @@ public class SimulationLoader implements ISimulationLoader {
     String pathToMetadataFile =
         SimulationPathFactory.getPathToSimulationMetadataFile(simulationName);
 
-    if (FileUtil.getInstance().createFileFromString(pathToMetadataFile, json)) {
+    if (FileUtil.getInstance().createFileWithContent(pathToMetadataFile, json)) {
       log.info("Successfully updated metadata of simulation with name=" + simulationName);
     } else {
       log.info("Could not to update metadata of simulation with name=" + simulationName);

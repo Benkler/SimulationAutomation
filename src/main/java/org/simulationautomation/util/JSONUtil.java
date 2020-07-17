@@ -2,9 +2,16 @@ package org.simulationautomation.util;
 
 import com.google.gson.Gson;
 
+/**
+ * Json Utility class.
+ * 
+ * @author Niko Benkler
+ *
+ */
 public class JSONUtil {
 
   private Gson gson;
+  // Singleton
   private static JSONUtil INSTANCE;
 
   private JSONUtil() {

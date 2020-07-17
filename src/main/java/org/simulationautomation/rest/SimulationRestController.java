@@ -22,9 +22,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * Rest Controller to handle REST-Requests for single simulations.
+ * 
+ * @author Niko Benkler
+ *
+ */
 @RestController
 @Component
-// TODO base path?
 public class SimulationRestController {
 
   private static final Logger log = LoggerFactory.getLogger(SimulationRestController.class);
@@ -34,9 +39,8 @@ public class SimulationRestController {
   ISimulationServiceProxy simulationServiceProxy;
 
 
-  // TODO send experiment data & Post Mapping
   /**
-   * Rest-Endpoint to trigger simulation with give simulation data.
+   * Rest-Endpoint to trigger simulation with given simulation data.
    * 
    * @return
    * @throws URISyntaxException
@@ -100,7 +104,7 @@ public class SimulationRestController {
 
 
   /**
-   * Rest end point to get zipped simulation results
+   * Rest end point to get zipped simulation results for specified simulation
    * 
    * @param simulationName
    * @return

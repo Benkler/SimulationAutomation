@@ -15,9 +15,16 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Utility class for creating and loading files.
+ * 
+ * @author Niko Benkler
+ *
+ */
 public class FileUtil {
 
   private static final Logger log = LoggerFactory.getLogger(FileUtil.class);
+  // Singleton
   private static FileUtil INSTANCE;
 
   private FileUtil() {
@@ -49,7 +56,7 @@ public class FileUtil {
   }
 
   /**
-   * Delete Directory and content
+   * Delete Directory and content at specified path
    * 
    * @param path
    */
@@ -100,6 +107,9 @@ public class FileUtil {
     return stream.toString();
   }
 
+  /*
+   * Actual load method: Load File into ByteArrayOutputStream
+   */
   private ByteArrayOutputStream loadFile(String path) {
     log.info("Load file at path=" + path);
 
@@ -123,12 +133,13 @@ public class FileUtil {
   }
 
   /**
-   * Creates (or replace) file at specified path with given content.
+   * Creates file at specified path with given content.
    * 
    * @param path
    * @param content
+   * @return true if successful, false otherwise
    */
-  public boolean createFileFromString(String path, String content) {
+  public boolean createFileWithContent(String path, String content) {
 
 
     File file = new File(path);
@@ -150,11 +161,11 @@ public class FileUtil {
 
   /**
    * Searches for a file in a given directory recursively, which means also to search in all
-   * subdirectories.
+   * sub-directories.
    * 
    * @param simulationBasePath
    * @param fileName
-   * @return
+   * @return null if not found
    */
   public byte[] loadFileFromDirectoryRecursively(String baseDirectoryPath, String fileName) {
     Path start = Paths.get(baseDirectoryPath);

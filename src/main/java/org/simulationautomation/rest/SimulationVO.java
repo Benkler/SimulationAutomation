@@ -3,6 +3,12 @@ package org.simulationautomation.rest;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
 
+/**
+ * POJO Object that represents a Simulation. Used for REST-transmission
+ * 
+ * @author Niko Benkler
+ *
+ */
 public class SimulationVO {
 
   private String simulationName;

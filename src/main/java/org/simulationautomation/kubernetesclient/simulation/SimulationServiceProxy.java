@@ -121,7 +121,7 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
 
 
     String zipPath =
-        ZipUtil.getInstance().createZipFileRecursively(pathToOutputFolder, pathToZipFile);
+        ZipUtil.getInstance().zipDirectoryRecursively(pathToOutputFolder, pathToZipFile);
 
     if (zipPath == null) {
       log.info("Could not create zip file for simulation with name=" + simulationName);

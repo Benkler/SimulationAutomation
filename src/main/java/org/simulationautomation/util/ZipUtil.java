@@ -20,6 +20,12 @@ import java.util.zip.ZipOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Utility Class for zip files.
+ * 
+ * @author Niko Benkler
+ *
+ */
 public class ZipUtil {
 
   private static final int BUFFER = 512;
@@ -27,6 +33,7 @@ public class ZipUtil {
   private static final int TOOMANY = 1024; // Max number of files
 
   private static final Logger log = LoggerFactory.getLogger(ZipUtil.class);
+  // Singleton
   private static ZipUtil INSTANCE;
 
   private ZipUtil() {
@@ -41,6 +48,14 @@ public class ZipUtil {
   }
 
 
+  /**
+   * Go through Zip File (given as byte array) and extract all file names with specified extension
+   * 
+   * @param zipAsByteArray
+   * @param extension
+   * @return
+   * @throws IOException
+   */
   public final List<String> getFileNamesFromZipFileWithExtension(byte[] zipAsByteArray,
       String extension) throws IOException {
     log.info("Extracting file names from zip file with give extension: " + extension);
@@ -129,18 +144,19 @@ public class ZipUtil {
 
 
   /**
-   * Zip recursively all directories and files starting from the given directory</br>
-   * Destination will be the same path
+   * Zip recursively all directories and files starting from the given base directory path</br>
+   * Save zip file at specified destination path
    * 
-   * @param directoryPath which has to be zipped
+   * @param directoryPathToBeZipped which has to be zipped
    * @return path to zip file
    */
-  public String createZipFileRecursively(String directoryPath, String pathToZipFile) {
+  public String zipDirectoryRecursively(String directoryPathToBeZipped,
+      String zipFileDestinationDirectoryPath) {
     // try with resources - creating outputstream and ZipOutputStream
-    try (FileOutputStream fos = new FileOutputStream(pathToZipFile);
+    try (FileOutputStream fos = new FileOutputStream(zipFileDestinationDirectoryPath);
         ZipOutputStream zos = new ZipOutputStream(fos)) {
 
-      Path sourcePath = Paths.get(directoryPath);
+      Path sourcePath = Paths.get(directoryPathToBeZipped);
       // using WalkFileTree to traverse directory
       Files.walkFileTree(sourcePath, new SimpleFileVisitor<Path>() {
         @Override
@@ -167,9 +183,9 @@ public class ZipUtil {
       });
 
 
-      return pathToZipFile;
+      return zipFileDestinationDirectoryPath;
     } catch (IOException e) {
-      log.error("Could not zip file at specified directoy path=" + directoryPath, e);
+      log.error("Could not zip file at specified directoy path=" + directoryPathToBeZipped, e);
       return null;
     }
   }
