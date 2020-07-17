@@ -1,6 +1,5 @@
 package org.simulationautomation.kubernetesclient.simulation;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.simulationautomation.kubernetesclient.api.ISimulationAutomationServiceProxy;
@@ -32,17 +31,11 @@ public class SimulationAutomationServiceProxy implements ISimulationAutomationSe
   @Override
   public List<SimulationVO> getExistingSimulations() {
     List<Simulation> existingSimulations = simulationServiceRegistry.getSimulations();
-    List<SimulationVO> existingSimulationDTOs = new ArrayList<SimulationVO>();
 
-    for (Simulation simulation : existingSimulations) {
-      SimulationVO simuDTO = new SimulationVO();
-      simuDTO.setSimulationName(simulation.getMetadata().getName());
-      simuDTO.setSimulationStatus(simulation.getStatus().getStatusCode());
-      existingSimulationDTOs.add(simuDTO);
-    }
+    return existingSimulations.stream().map(SimulationVO::toSimulationVO)
+        .collect(Collectors.toList());
 
 
-    return existingSimulationDTOs;
   }
 
 }

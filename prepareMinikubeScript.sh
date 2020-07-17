@@ -4,7 +4,8 @@
   
   echo "---------------Starting to prepare minikube cluster-------------------"
   
-  minikube delete --all && minikube start --driver=kvm2 --cpus 2 --memory 4096 
+  
+  minikube delete --all && minikube start --driver=kvm2 --cpus 2 --memory 6144
   
    eval $(minikube docker-env)
   
