@@ -9,6 +9,7 @@ import org.simulationautomation.kubernetesclient.api.ISimulationOperator;
 import org.simulationautomation.kubernetesclient.api.ISimulationPodWatcher;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
+import org.simulationautomation.kubernetesclient.exceptions.SimulationNotFoundException;
 import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,11 +74,14 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
       return;
     }
 
-    Simulation simulation = getSimulationFromPod(pod);
-    if (simulation == null) {
+    Simulation simulation;
+    try {
+      simulation = getSimulationFromPod(pod);
+    } catch (SimulationNotFoundException e) {
       log.error("No simulation found for pod with name=" + podName + ". Cannot update status.");
       return;
     }
+
 
 
     /*
@@ -123,15 +127,11 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
    * Get accompanying Simulation for given Pod from @SimulationService
    * 
    */
-  private Simulation getSimulationFromPod(Pod pod) {
+  private Simulation getSimulationFromPod(Pod pod) throws SimulationNotFoundException {
     OwnerReference ownerReference = getControllerOf(pod);
 
-    Simulation simulation = simulationsServiceRegistry.getSimulation(ownerReference.getName());
-    if (simulation == null) {
-      log.info("Simulation not found for pod with name: " + pod.getMetadata().getName());
-    }
+    return simulationsServiceRegistry.getSimulation(ownerReference.getName());
 
-    return simulation;
   }
 
   /*

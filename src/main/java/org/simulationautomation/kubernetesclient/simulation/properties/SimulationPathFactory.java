@@ -1,5 +1,11 @@
 package org.simulationautomation.kubernetesclient.simulation.properties;
 
+/**
+ * Utility class to create diverse paths.
+ * 
+ * @author Niko Benkler
+ *
+ */
 public class SimulationPathFactory {
 
   private static SimulationPathFactory INSTANCE;

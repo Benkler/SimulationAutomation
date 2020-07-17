@@ -2,8 +2,8 @@ package org.simulationautomation.kubernetesclient.api;
 
 import java.util.List;
 import org.simulationautomation.kubernetesclient.exceptions.RestClientException;
+import org.simulationautomation.kubernetesclient.rest.SimulationVO;
 import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
-import org.simulationautomation.rest.SimulationVO;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ISimulationServiceProxy {

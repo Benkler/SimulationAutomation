@@ -3,19 +3,27 @@ package org.simulationautomation.kubernetesclient.api;
 import java.util.List;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
+import org.simulationautomation.kubernetesclient.exceptions.SimulationNotFoundException;
 import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;
 
 
 public interface ISimulationServiceRegistry {
 
   /**
-   * Query all simulations currently stored in this service
+   * Query available simulations in cluster.
    * 
    * @return
    */
   List<Simulation> getSimulations();
 
-  Simulation getSimulation(String simulationName);
+  /**
+   * Query simulation by name
+   * 
+   * @param simulationName
+   * @return
+   * @throws SimulationNotFoundException
+   */
+  Simulation getSimulation(String simulationName) throws SimulationNotFoundException;
 
   /**
    * Update given simulation status for simulation with given name
@@ -25,6 +33,6 @@ public interface ISimulationServiceRegistry {
    */
   void updateStatus(Simulation simulation, SimulationStatusCode simulationSatusCode);
 
-  SimulationStatus getSimulationStatus(String simulatioUUID);
+  SimulationStatus getSimulationStatus(String simulationName) throws SimulationNotFoundException;
 
 }

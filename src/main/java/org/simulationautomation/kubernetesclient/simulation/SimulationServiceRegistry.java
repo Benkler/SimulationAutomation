@@ -7,6 +7,7 @@ import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.crds.SimulationDoneable;
 import org.simulationautomation.kubernetesclient.crds.SimulationList;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
+import org.simulationautomation.kubernetesclient.exceptions.SimulationNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +16,12 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
 /**
- * This class manages the current Simulations
+ * Manage and access available simulations on kubernetes cluster. Also used to update persisted
+ * simulations (persisted on files system by simulationLoader)
  *
  * @author Niko Benkler
  *
  */
-// TODO HashMap rausschmeißen
 @Component
 public class SimulationServiceRegistry implements ISimulationServiceRegistry {
   private Logger log = LoggerFactory.getLogger(SimulationServiceRegistry.class);
@@ -34,11 +35,6 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
 
 
 
-  /**
-   * Query all simulations currently stored in this service
-   * 
-   * @return
-   */
   @Override
   public List<Simulation> getSimulations() {
     log.info("Query all simulations in namespace");
@@ -48,11 +44,12 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
 
 
   @Override
-  public Simulation getSimulation(String simulationName) {
+  public Simulation getSimulation(String simulationName) throws SimulationNotFoundException {
     log.info("Query simulation with name=" + simulationName);
     if (simulationName == null) {
       log.info("Could not query simulation as given name was null");
-      return null;
+      throw new SimulationNotFoundException(
+          "Simulation cannot be found. Provided simulation name was null");
     }
     List<Simulation> simulations = simulationCRDClient.list().getItems();
 
@@ -63,16 +60,12 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
       }
     }
     log.info("No Simulation found for name=" + simulationName);
-    return null;
+    throw new SimulationNotFoundException(
+        "Simulation with name= " + simulationName + " not found!");
   }
 
 
-  /**
-   * Update given simulation status for simulation with given name
-   * 
-   * @param simulationName
-   * @param simulationSatusCode
-   */
+
   @Override
   public void updateStatus(Simulation simulation, SimulationStatusCode simulationSatusCode) {
     if (simulation == null) {
@@ -133,7 +126,8 @@ public class SimulationServiceRegistry implements ISimulationServiceRegistry {
   }
 
   @Override
-  public SimulationStatus getSimulationStatus(String simulationName) {
+  public SimulationStatus getSimulationStatus(String simulationName)
+      throws SimulationNotFoundException {
 
     Simulation simulation = getSimulation(simulationName);
     if (simulation == null) {

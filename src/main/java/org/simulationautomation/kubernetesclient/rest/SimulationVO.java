@@ -1,4 +1,4 @@
-package org.simulationautomation.rest;
+package org.simulationautomation.kubernetesclient.rest;
 
 import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.simulation.SimulationStatusCode;

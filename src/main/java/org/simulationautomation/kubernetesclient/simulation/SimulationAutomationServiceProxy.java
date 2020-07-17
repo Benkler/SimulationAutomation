@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 import org.simulationautomation.kubernetesclient.api.ISimulationAutomationServiceProxy;
 import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.crds.Simulation;
-import org.simulationautomation.rest.SimulationVO;
+import org.simulationautomation.kubernetesclient.rest.SimulationVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +22,8 @@ public class SimulationAutomationServiceProxy implements ISimulationAutomationSe
   @Autowired
   ISimulationServiceRegistry simulationServiceRegistry;
 
+
+
   @Override
   public List<String> getNamesOfExistingSimulations() {
     return simulationServiceRegistry.getSimulations().stream()
@@ -34,7 +36,6 @@ public class SimulationAutomationServiceProxy implements ISimulationAutomationSe
 
     return existingSimulations.stream().map(SimulationVO::toSimulationVO)
         .collect(Collectors.toList());
-
 
   }
 

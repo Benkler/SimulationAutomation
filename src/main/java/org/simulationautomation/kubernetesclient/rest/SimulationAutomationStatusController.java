@@ -1,4 +1,4 @@
-package org.simulationautomation.rest;
+package org.simulationautomation.kubernetesclient.rest;
 
 import java.util.List;
 import org.simulationautomation.kubernetesclient.api.ISimulationAutomationServiceProxy;
@@ -12,6 +12,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Rest-Controller for any other REST-queries to the client
+ * 
+ * @author Niko Benkler
+ *
+ */
 @RestController
 @Component
 public class SimulationAutomationStatusController {
@@ -24,7 +30,6 @@ public class SimulationAutomationStatusController {
   /**
    * Rest-Endpoint to retrieve all existing simulations, regardless whether they are still running
    * or already finished. </br>
-   * 
    * 
    * @return List of SimulationVO in JSON-Format
    */
@@ -43,8 +48,8 @@ public class SimulationAutomationStatusController {
   }
 
   /**
-   * Simple Rest-Interface to check whether the client is up and running. This is, if spring has
-   * initialized the controller.
+   * Simple Rest-Response to check whether the client is up and running. As this SpringApplication
+   * runs also in a kubernetes pod, we don't need to check any other conditions.
    * 
    * @return
    */

@@ -7,6 +7,7 @@ import io.fabric8.kubernetes.client.Watcher;
 
 public interface ISimulationWatcher extends Watcher<Simulation> {
 
+
   @Override
   void eventReceived(Watcher.Action action, Simulation simulation);
 

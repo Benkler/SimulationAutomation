@@ -1,6 +1,13 @@
 
 package org.simulationautomation.kubernetesclient.simulation.properties;
 
+/**
+ * Property class for entre environment
+ * 
+ * @author Niko Benkler
+ *
+ */
+// TODO Get rid of that! Load .properties on startup
 public final class SimulationProperties {
   /*
    * Properties mainly used to create and manage Simulation CRD

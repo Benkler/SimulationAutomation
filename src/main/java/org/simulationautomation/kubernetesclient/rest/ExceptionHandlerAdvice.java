@@ -1,4 +1,4 @@
-package org.simulationautomation.rest;
+package org.simulationautomation.kubernetesclient.rest;
 
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -36,6 +36,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
 
   }
+
 
 
   @Override

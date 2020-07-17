@@ -9,8 +9,9 @@ import org.simulationautomation.kubernetesclient.api.ISimulationServiceRegistry;
 import org.simulationautomation.kubernetesclient.crds.SimulationStatus;
 import org.simulationautomation.kubernetesclient.exceptions.RestClientException;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
+import org.simulationautomation.kubernetesclient.exceptions.SimulationNotFoundException;
+import org.simulationautomation.kubernetesclient.rest.SimulationVO;
 import org.simulationautomation.kubernetesclient.simulation.properties.SimulationPathFactory;
-import org.simulationautomation.rest.SimulationVO;
 import org.simulationautomation.util.FileUtil;
 import org.simulationautomation.util.ZipUtil;
 import org.slf4j.Logger;
@@ -48,18 +49,13 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
     byte[] zippedExperimentData;
     try {
       zippedExperimentData = file.getBytes();
-    } catch (IOException e1) {
+      return SimulationVO.toSimulationVO(operator.createNewSimulation(zippedExperimentData));
+    } catch (IOException | SimulationCreationException e1) {
       log.error("Error while creating simulation. Error Code=" + e1.getMessage());
       throw new RestClientException("Error while creating Simulation");
     }
 
-    try {
-      return SimulationVO.toSimulationVO(operator.createNewSimulation(zippedExperimentData));
-    } catch (SimulationCreationException e) {
-      log.error("Error while creating simulation. Error Message: " + e.getMessage());
 
-      throw new RestClientException("Error while creating Simulation");
-    }
   }
 
   @Override
@@ -88,14 +84,18 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
    * @param simulationName
    * @return StatusCode
    * @throws RestClientException
+   * @throws SimulationNotFoundException
    */
   @Override
   public SimulationStatusCode getSimulationStatus(String simulationName)
       throws RestClientException {
     checkIfSimulationExists(simulationName);
 
-
-    return simulationServiceRegistry.getSimulationStatus(simulationName).getStatusCode();
+    try {
+      return simulationServiceRegistry.getSimulationStatus(simulationName).getStatusCode();
+    } catch (SimulationNotFoundException e) {
+      throw new RestClientException("Simulation with name= " + simulationName + " not found!");
+    }
   }
 
 
@@ -125,7 +125,8 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
 
     if (zipPath == null) {
       log.info("Could not create zip file for simulation with name=" + simulationName);
-      return null;
+      throw new RestClientException(
+          "Could not get simulation results for simulation with name= " + simulationName);
     }
 
     byte[] zipAsByteStream = FileUtil.getInstance().loadFileAsByteStream(zipPath);
@@ -166,7 +167,7 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
         .collect(Collectors.toList());
   }
 
-  private boolean isSimulationFinished(String simulationName) {
+  private boolean isSimulationFinished(String simulationName) throws SimulationNotFoundException {
 
     SimulationStatus status = simulationServiceRegistry.getSimulationStatus(simulationName);
 
@@ -175,7 +176,16 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
   }
 
   private void checkIfSimulationIsFinished(String simulationName) throws RestClientException {
-    if (!isSimulationFinished(simulationName)) {
+
+    boolean isFinished = false;
+
+    try {
+      isFinished = isSimulationFinished(simulationName);
+    } catch (SimulationNotFoundException e) {
+      throw new RestClientException("Simulation with name= " + simulationName + " does not exist");
+    }
+
+    if (!isFinished) {
       throw new RestClientException(
           "Simulation with name= " + simulationName + " is not yet finished");
     }
@@ -185,14 +195,15 @@ public class SimulationServiceProxy implements ISimulationServiceProxy {
 
 
 
-  private boolean doesSimulationExist(String simulationName) {
-    return simulationServiceRegistry.getSimulation(simulationName) != null;
-  }
-
   private void checkIfSimulationExists(String simulationName) throws RestClientException {
-    if (!doesSimulationExist(simulationName)) {
+
+    try {
+      simulationServiceRegistry.getSimulation(simulationName);
+    } catch (SimulationNotFoundException e) {
       throw new RestClientException("Simulation with name= " + simulationName + " does not exist");
     }
+
+
   }
 
 

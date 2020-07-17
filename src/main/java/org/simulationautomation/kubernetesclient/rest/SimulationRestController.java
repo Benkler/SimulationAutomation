@@ -1,4 +1,4 @@
-package org.simulationautomation.rest;
+package org.simulationautomation.kubernetesclient.rest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,7 +43,7 @@ public class SimulationRestController {
    * Rest-Endpoint to trigger simulation with given simulation data.
    * 
    * @return
-   * @throws URISyntaxException
+   * @throws URISyntaxException will not happen
    * @throws RestClientException
    */
   @PostMapping("/simulation/create")
@@ -75,7 +75,7 @@ public class SimulationRestController {
    * 
    * @param simulationName
    * @return
-   * @throws URISyntaxException
+   * @throws URISyntaxException will not happen
    * @throws RestClientException
    */
   @GetMapping("/simulation/{simulationName}/status")
@@ -120,20 +120,13 @@ public class SimulationRestController {
 
     // Includes check if simulation exists and is finished
     byte[] contents = simulationServiceProxy.getSimulationResults(simulationName);
-    if (contents == null) {
-      String response =
-          "Simulation with name=" + simulationName + " encountered an error while loading zip";
-      log.info("Rest Response: " + response);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response.getBytes());
 
-    } else {
-      HttpHeaders headers = new HttpHeaders();
-      headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + simulationName);
-      headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
+    HttpHeaders headers = new HttpHeaders();
+    headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + simulationName);
+    headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
 
-      log.info("Successfully retrieve zip file for simulation with name=" + simulationName);
-      return new ResponseEntity<byte[]>(contents, headers, HttpStatus.OK);
-    }
+    log.info("Successfully retrieve zip file for simulation with name=" + simulationName);
+    return new ResponseEntity<byte[]>(contents, headers, HttpStatus.OK);
 
 
 
@@ -172,7 +165,13 @@ public class SimulationRestController {
   }
 
 
-
+  /**
+   * Rest endpoint to get log file of simulation
+   * 
+   * @param simulationName
+   * @return
+   * @throws RestClientException
+   */
   @RequestMapping(value = "/simulation/{simulationName}/log", method = RequestMethod.GET)
   public ResponseEntity<?> getSimulationLog(
       @PathVariable(name = "simulationName") String simulationName) throws RestClientException {

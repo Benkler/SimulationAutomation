@@ -13,7 +13,7 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionVer
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 /**
- * Build Simulation CRD on startup and provided CRD context.
+ * Utility class for Simulation Custom Resource Definition
  * 
  * @author Niko Benkler
  *
@@ -26,7 +26,7 @@ public class SimulationCRDUtil {
   private static final String VERSION = "v1";
 
   /**
-   * Get custom resource definition for kind=simulation
+   * Build custom resource definition for Simulation
    */
   public static CustomResourceDefinition getCRD() {
 
@@ -61,6 +61,11 @@ public class SimulationCRDUtil {
     return simulationCRD;
   }
 
+  /**
+   * Build and Return CRD-Context for CR Simulation
+   * 
+   * @return
+   */
   public CustomResourceDefinitionContext getCRDContext() {
     return new CustomResourceDefinitionContext.Builder()
         .withGroup(SimulationProperties.SIMULATION_GROUP)

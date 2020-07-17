@@ -1,7 +1,7 @@
 package org.simulationautomation.kubernetesclient.api;
 
 import java.util.List;
-import org.simulationautomation.rest.SimulationVO;
+import org.simulationautomation.kubernetesclient.rest.SimulationVO;
 
 public interface ISimulationAutomationServiceProxy {
 

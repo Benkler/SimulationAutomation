@@ -23,6 +23,12 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
+/**
+ * Utility class to create Kubernetes Client on Startup which can be autowired by any other classes.
+ * 
+ * @author Niko Benkler
+ *
+ */
 @Configuration
 public class ClientProducer {
 
@@ -31,6 +37,11 @@ public class ClientProducer {
   @Autowired
   private IK8SCoreRuntime k8SCoreRuntime;
 
+  /**
+   * Find current namespace (magic file in specified path)
+   * 
+   * @return
+   */
   @Bean(name = "namespace")
   @Scope("singleton")
   public String findMyCurrentNameSpace() {
@@ -48,6 +59,12 @@ public class ClientProducer {
 
   }
 
+  /**
+   * Make Default Kubernetes Client for basic calls to kubernetes api
+   * 
+   * @param namespace
+   * @return
+   */
   @Bean
   @Scope("singleton")
   public KubernetesClient makeDefaultClient(@Qualifier("namespace") String namespace) {
@@ -55,10 +72,14 @@ public class ClientProducer {
     log.info("Kubernetes Client created in namespace=" + namespace);
 
     return new DefaultKubernetesClient().inNamespace(namespace);
-    // return new DefaultKubernetesClient();
 
   }
 
+  /**
+   * Make Simulation Client for specific simulation-related calls to kubernetes api
+   * 
+   * @return
+   */
   @Bean
   @Scope("singleton")
   public NonNamespaceOperation<Simulation, SimulationList, SimulationDoneable, Resource<Simulation, SimulationDoneable>> makeSimulationClient() {

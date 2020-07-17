@@ -9,10 +9,16 @@ import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
+/**
+ * Utility class to create simulation namespace
+ * 
+ * @author Niko Benkler
+ *
+ */
 @Component
-public class CustomNamespaceBuilder implements ICustomNameSpaceBuilder {
+public class SimulationNameSpaceBuilder implements ICustomNameSpaceBuilder {
 
-  private static final Logger log = LoggerFactory.getLogger(CustomNamespaceBuilder.class);
+  private static final Logger log = LoggerFactory.getLogger(SimulationNameSpaceBuilder.class);
 
   @Autowired
   KubernetesClient client;
