@@ -19,14 +19,40 @@ public interface ISimulationServiceProxy {
    */
   byte[] getSimulationResults(String simulationName) throws RestClientException;
 
+  /**
+   * Get simulation Log for simulation with given name
+   * 
+   * @param simulationName
+   * @return
+   * @throws RestClientException
+   */
   byte[] getSimulationLog(String simulationName) throws RestClientException;
 
+  /**
+   * Create simulation from transmitted experiment data
+   * 
+   * @param file
+   * @return
+   * @throws RestClientException
+   */
   SimulationVO createSimulation(MultipartFile file) throws RestClientException;
 
+  /**
+   * Get all available simulations
+   * 
+   * @return
+   */
   List<SimulationVO> getSimulations();
 
   byte[] getSimulationResultFile(String simulationName, String fileName) throws RestClientException;
 
+  /**
+   * Get status for specific simulation
+   * 
+   * @param simulationName
+   * @return
+   * @throws RestClientException
+   */
   SimulationStatusCode getSimulationStatus(String simulationName) throws RestClientException;
 
 

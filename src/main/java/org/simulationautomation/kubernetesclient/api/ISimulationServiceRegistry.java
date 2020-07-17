@@ -33,6 +33,13 @@ public interface ISimulationServiceRegistry {
    */
   void updateStatus(Simulation simulation, SimulationStatusCode simulationSatusCode);
 
+  /**
+   * Get simulation status for simulation with given name
+   * 
+   * @param simulationName
+   * @return
+   * @throws SimulationNotFoundException
+   */
   SimulationStatus getSimulationStatus(String simulationName) throws SimulationNotFoundException;
 
 }
