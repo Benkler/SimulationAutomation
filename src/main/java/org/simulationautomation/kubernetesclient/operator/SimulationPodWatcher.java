@@ -26,6 +26,7 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
   static final String POD_PHASE_SUCCEEDED = "Succeeded";
   static final String POD_PHASE_FAILED = "Failed";
   static final String POD_PHASE_RUNNING = "Running";
+  static final String POD_PHASE_PENDING = "Pending";
 
 
   private Logger log = LoggerFactory.getLogger(SimulationPodWatcher.class);
@@ -98,8 +99,9 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
         break;
       case POD_PHASE_RUNNING:
         simulationsServiceRegistry.updateStatus(simulation, SimulationStatusCode.RUNNING);
-
         break;
+      case POD_PHASE_PENDING:
+        simulationsServiceRegistry.updateStatus(simulation, SimulationStatusCode.PENDING);
       default:
         log.info("Alternative pod phase found: " + pod.getStatus().getPhase());
 

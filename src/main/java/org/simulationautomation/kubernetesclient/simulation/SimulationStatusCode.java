@@ -8,7 +8,8 @@ package org.simulationautomation.kubernetesclient.simulation;
  */
 public enum SimulationStatusCode {
 
-  CREATED("CREATED"), RUNNING("RUNNING"), SUCCEEDED("SUCCEEDED"), FAILED("FAILED");
+  CREATED("CREATED"), RUNNING("RUNNING"), SUCCEEDED("SUCCEEDED"), FAILED("FAILED"), PENDING(
+      "PENDING");
 
 
   private String status;

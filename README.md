@@ -10,12 +10,12 @@ Therefore, the following steps were necessary:
 2. Use an existing Kubernetes-Client to access the Kubernetes-Api
 3. Choose a methodology to exchange and persist data between the pods and the client
 4. Define a way to transmit simulation data
+5. Implement a View in the Palladio Eclipse Instance to control the simulations
 
-#### 
 
 #### Prerequisites
 
-Good understanding of the basic principles of [Kubernetes][] (especially CurstomResources and file storage).
+Good understanding of the basic principles of [Kubernetes][] (especially CurstomResources, file storage with NFS), EMF and Java SWT.
 
 The setup:
 
@@ -28,16 +28,27 @@ Hints:
 * Following commands need to be executed 
   * kubectl apply -f pathToClusterRoleFile/clusterRole.yml  -> rights for rest client
   * kubectl apply -f pathToServiceFile/service.yml  -> Expose rest service
+  * kubectl apply -f pathToDeploymentFile/deployment.yml -> Actual deployment
+* It is recommended to pull following docker images beforehand.
+  * When using minikube, execute following command to pull into minikube docker repo
+    * eval $(minikube docker-env)
+
+  * Images
+    * docker pull simulationautomation-k8s
+    * docker pull cpuguy83/nfs-server
+    * docker pull palladiosimulator/palladio-experimentautomation
+    * docker pull adoptopenjdk/openjdk11:alpine-jre
+  * Depending on Internet connection, this might take a while (5-30min)
 
 
 
 ## Basic Concepts
 
-Basic Concepts of the kubernetes client. 
+Basic Concepts of the Kubernetes client. 
 
 ### Fabric-8 Kubernetes Client
 
-The [Fabric-8 Kubrenetes Client][] provides access to the full Kubernetes REST API via fluent DSL. 
+The [Fabric-8 Kubernetes Client][] provides access to the full Kubernetes REST API via fluent DSL. 
 
 It is used to:
 
@@ -80,14 +91,14 @@ Therefore, it is possible to dynamically create a pod, if someone triggers the R
 * Start simulation with existing script of [ExperimentAutomation][ExperimentAutomation]  
   * **`RunExperimentAutomation.sh`**
 * Data Exchange:
-  * Define Input- and Output Folder for simulation files (Input) and simulation results (Output) as VolumeDefinition in Kubrenetes -> Both folders are again mounted into the palladio simulation docker container
+  * Define Input- and Output Folder for simulation files (Input) and simulation results (Output) as VolumeDefinition in Kubernetes -> Both folders are again mounted into the Palladio simulation docker container
   * Input folder: palladio expects experiment data in `/usr/ExperimentData`
   * Ouput: palladio writes results into `/result`
   * General structure for data exchange -> See "Data Exchange: Network File System"
 
 ### Simulation CustomResourceDefinition (CRD)
 
-With CustomResourceDefinitions, Kubrenetes provides a concept to create a customized object that can be configured and deployed to the Kubernetes cluster. In this project, a  pod containing the palladio simulation container is always created alongside a simulation CRD to control and persist simulations. 
+With CustomResourceDefinitions, Kubernetes provides a concept to create a customized object that can be configured and deployed to the Kubernetes cluster. In this project, a  pod containing the palladio simulation container is always created alongside a simulation CRD to control and persist simulations. 
 
 First, a Simulation CRD prepares the folder structure. This includes to copy the simulation experiment files to the desired destination (which is mounted into the pod). 
 
@@ -97,14 +108,14 @@ Third, CRDs are open for extensions. New attributes can be defined very easily.
 
 Summarised:
 
-* SimulationCRD provides skeleton for a simulation pods
+* SimulationCRD provides skeleton for a simulation pod
 * SimulationCRDs are persisted and restored after a crash
 * SimulationCRDs are the "entrypoint" to the respective simulation 
 * Access simulation by their unique name (simulation-"uuid")
 
 ### Data Exchange: Network File System
 
-A Container's file system lives only as long as the Container does. So when a Container terminates and restarts, filesystem changes are lost. For more consistent storage that is independent of the Container and not limited to the lifecycle of a Pod, Volumes need to be used.
+A Container's file system lives only as long as the Container does. So when a Container terminates and restarts, file system changes are lost. For more consistent storage that is independent of the Container and not limited to the life cycle of a Pod, Volumes need to be used.
 
 The difficulty for this application is the "read/write-many relationship" between the client and the simulation pods. The simulation client has to provide the (via REST received) simulation data for the pods. Once finished, the pods need to persist the simulation data at a destination where the simulation client has access. In short, it is necessary to create an environment which both, simulation client and simulation pod can access. 
 
@@ -115,7 +126,7 @@ In the case of the simulation client, we have the following structure:
 * Root Path of the simulation Client: `/usr/Simulation`
   * The NFS path `"/"`is mounted to this path 
 * Root Path of each simulation: `/usr/Simulation/simulation-"uuid"`
-  * "uuid" is replaced by an integer (eg..: `simulation-7f90b1e143fb458eb14d0077114dd51a`)
+  * "uuid" is replaced by an generated UUID (eg..: `simulation-7f90b1e143fb458eb14d0077114dd51a`)
   * Simulation pods do not have access to this folder (only to sub folder Input/Ouput)
 * Input Path of each simulation: `/usr/Simulation/simulation-"uuid"/Input`
   * This folder is mounted into the the pod
@@ -136,12 +147,22 @@ It is important to mention that a simulation pod cannot access the folder struct
 
 The Fabric-8-Client Framework provides a useful functionality called "Watcher".  With this, state changes of Simulation CRDs and Pods can be easily 
 
-* SimulationWatcher
-  * 
+* SimulationWatcher.java
+  * So far, only dummy implementation
+  * Only used for internal logging
+* SimulationLogWatcher.java
+  * Registers Watcher for the Logs of a Simulation Pod -> Watches for anything that the pod writes to StandardOut/ErrorOut
+    * Again, Fabric8 Client already provides this feature as `pod.watchLog()`
 
 ### Log Files
 
 ### Startup Behaviour
+
+## REST Interface
+### Interface for specific simulation queries
+### Interface for other queries
+
+## Palladio Eclipse Plugin
 
 
 

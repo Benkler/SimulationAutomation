@@ -70,8 +70,9 @@ public class SimulationLogWatcher implements ISimulationLogWatcher {
 
           // Wait until simulation is finished (Timeout after specified value)
           client.pods().inNamespace(SimulationProperties.SIMULATION_NAMESPACE)
-              .withName(simulationPodName)
-              .waitUntilCondition(pod -> pod.getStatus().getPhase().equals("Succeeded"),
+              .withName(simulationPodName).waitUntilCondition(
+                  pod -> (pod.getStatus().getPhase().equals("Succeeded")
+                      || pod.getStatus().getPhase().equals("Failed")),
                   SimulationProperties.SIMULATION_DURATION_MAX_MIN, TimeUnit.MINUTES);
 
           // Simulation Finished -> Close FileOutputStream
