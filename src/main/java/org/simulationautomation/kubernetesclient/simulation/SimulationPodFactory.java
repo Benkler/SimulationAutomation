@@ -18,6 +18,12 @@ import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 
+/**
+ * Factory class to create pods that can execute a simulation
+ * 
+ * @author Niko Benkler
+ *
+ */
 @Service
 public class SimulationPodFactory implements ISimulationPodFactory {
   private static final String POD_RESTART_POLICY = "Never";

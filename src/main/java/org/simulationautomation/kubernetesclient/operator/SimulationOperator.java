@@ -71,16 +71,19 @@ public class SimulationOperator implements ISimulationOperator {
   @Override
   public void init() {
     nsBuilder.createNamespace(SIMULATION_NAMESPACE);
-
+    clearCluster();
     restoreExistingSimulations();
-
     // Register watcher for both, simulations (crds) and pods in namespace simulation
     registerSimulationWatcher();
     registerSimulationPodWatcher();
 
   }
 
+  private void clearCluster() {
+    // Remove old pods to avoid clashes regarding the resource versions
+    client.pods().inNamespace(SIMULATION_NAMESPACE).delete();
 
+  }
 
   @Override
   public Pod getPodBySimulationName(String simulationName) {

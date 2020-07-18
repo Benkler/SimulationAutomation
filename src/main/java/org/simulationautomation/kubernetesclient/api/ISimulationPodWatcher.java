@@ -4,7 +4,12 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
 
-
+/**
+ * Implements functionality to watch event thrown by all pod of current cluster
+ * 
+ * @author Niko Benkler
+ *
+ */
 public interface ISimulationPodWatcher extends Watcher<Pod> {
 
   @Override

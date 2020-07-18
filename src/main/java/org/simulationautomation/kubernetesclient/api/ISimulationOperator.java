@@ -4,7 +4,14 @@ import org.simulationautomation.kubernetesclient.crds.Simulation;
 import org.simulationautomation.kubernetesclient.exceptions.SimulationCreationException;
 import io.fabric8.kubernetes.api.model.Pod;
 
-
+/**
+ * This class is the "heart" of te Kubernetes Client for Simulation Automation. It initializes the
+ * Kubernetes environment, which includes to set up the watchers for pods and simulation CRDs. Also
+ * it restores existing simulations on startup.
+ * 
+ * @author Niko Benkler
+ *
+ */
 public interface ISimulationOperator {
 
   /**
@@ -23,7 +30,6 @@ public interface ISimulationOperator {
    * @param name
    * @throws SimulationCreationException
    */
-  // TODO further parameters necessary
   Simulation createNewSimulation(byte[] zippedExperimentData) throws SimulationCreationException;
 
   /**
@@ -34,6 +40,11 @@ public interface ISimulationOperator {
    */
   Pod getPodBySimulationName(String simulationName);
 
+  /**
+   * Delete given pod
+   * 
+   * @param pod
+   */
   void deleteExistingSimulationPod(Pod pod);
 
 }
