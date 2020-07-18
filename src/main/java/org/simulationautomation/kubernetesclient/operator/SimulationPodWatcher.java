@@ -119,12 +119,6 @@ public class SimulationPodWatcher implements ISimulationPodWatcher {
     log.info("'Delete Pod' Event received for Pod with name= " + pod.getMetadata().getName());
   }
 
-  private void deletePod(Pod pod) {
-    log.info("Delete pod with name=" + pod.getMetadata().getName() + " in status "
-        + pod.getStatus().getPhase());
-
-  }
-
   /*
    * Get accompanying Simulation for given Pod from @SimulationService
    * 

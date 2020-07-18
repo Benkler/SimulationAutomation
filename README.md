@@ -153,16 +153,91 @@ The Fabric-8-Client Framework provides a useful functionality called "Watcher". 
 * SimulationLogWatcher.java
   * Registers Watcher for the Logs of a Simulation Pod -> Watches for anything that the pod writes to StandardOut/ErrorOut
     * Again, Fabric8 Client already provides this feature as `pod.watchLog()`
+    * Watcher needs to run in own Thread, as the scope of the watchLog()-Function surprisingly ends with the surrounding method call
+    * LogWatch start, as soon as Pod is in phase `Running`and ends when Pod is in phase `Succeeded` or `Failed`
+* SimulationPodWatcher.java
+  * Watches events of Pods that belong to a simulation (Any other events for other pods are ignored)
+  * Due to Kubernetes' cache behavior, it is necessary to save already seen events (event might get thrown multiple times)
+  * Following events are handled
+    * `Added`: Only logging
+    * `Deleted`: Only logging
+    * `Modified`: Main Functionality:
+      * Get Phase of Pod (`Failed, Succeeded, Running, Pending`) and update the Simulation metadata that belong to this pod 
+      * In short: Get Simulation from pod, update meta data which means -> Write current simulation metadata to file system
 
 ### Log Files
 
-### Startup Behaviour
+* Captured by SimulationLogWatcher.java as described previously
+* Capture log output of docker container and write it into log file for each simulation
+* Path of the log file: `/usr/Simulation/{simulationName}/log.txt`
+* Can be retrieved via RestCall
+
+### Startup Behavior
+
+* The Simulation Kubernetes client is designed in way that it can be resurrected after a crash
+* Simulations are persisted on the file system (i.e. the meta data that is necessary) to resurrect each simulation after the client crashed
+* On startup: 
+  * Client has to delete all Simulation CRDs from Kubernetes cluster as they might be in a error state and cannot be rescued
+    * Unfortunately, this kills running simulations and also simulations that were started before the client crashed and finished with status `Suceeded`
+    * This is necessary, as log files and especially the results could not be captured by the Kubernetes client 
+  * The client traverses the file system under `usr/Simulation`and load each simulation 
+    *  Simulations are persisted under e.g. `usr/Simulation/simulation/simulation-066f9a4a56f9489fb461633f7fe6b7dd`
+    * In this directory, there should by a file called `simulation.txt`that contains a  JSON representation of a Simulation.java Object
+    * The simulation is deserialized and validated 
+  * Only valid Simulations with status `Succeeded`are resurrected and restored on the cluster
+
+
 
 ## REST Interface
 ### Interface for specific simulation queries
+
+Rest-Interface for simulation-specific queries. Host-Path must be prepended.
+
+* Create simulation:`/simulation/create`
+  * Post Mapping, expects MultipartFile that contains zipped experiments data 
+  * Data format and required files according to [ExperimentAutomation][ExperimentAutomation] 
+* Get simulation status: `/simulation/{simulationName}/status`
+  * Get Mapping
+  * Returns status code
+    * `Created, Failed, Succeeded, Running, Pending`
+* Get simulation results: `/simulation/{simulationName}/results`
+  * Return result files of simulation as zipped byte array
+* Get simulation result file: `/simulation/{simulationName}/results/{fileName}`
+  * Return specific result file with given name
+* Get simulation log: `/simulation/{simulationName}/log`
+  * Return log files as byte array
+
 ### Interface for other queries
 
+Rest-Interface for other queries. Host-Path must be prepended.
+
+* Get available simulations: `/simulationautomation/simulations`
+  * Returns List of SimulationVO Objects in Json Format
+  * JSON Format example:
+    * `[
+        {
+          "simulationName": "simulation-066f9a4a56f9489fb461633f7fe6b7dd",
+          "simulationStatus": "SUCCEEDED",
+          "creationTimeStamp": "2020-07-18T16:15:28Z"
+        },
+        {
+          "simulationName": "simulation-2402da89cd084b15849366a6fa71ff0e",
+          "simulationStatus": "SUCCEEDED",
+          "creationTimeStamp": "2020-07-18T16:15:33Z"
+        }
+      ] `
+* Is client active: `/simulationautomation/client`
+  * Return Status 200 (OK) if client is up and running
+
+### Redirection
+
+* Redirection follows this [Pattern][http://restalk-patterns.org/long-running-operation-polling.html] 
+
+   ![](../KubernetesSimulationAutomation/images/RestPatter.png)
+
 ## Palladio Eclipse Plugin
+
+### Simulation Status
 
 
 
