@@ -2,7 +2,7 @@
 
 ## Preface
 
-This project contains a tool to automatically run Palladio experiments in parallel by separately deploying each experiment on a Kubernetes cluster. The  [ExperimentAutomation][ExperimentAutomation]  is already provided as docker container. The aim of this project is to write an intelligent RestClient that is able to receive the experiment files, set up and start a Kubernetes pods containing the mentioned docker container and finally collect the simulation data. 
+This project contains a tool to automatically run Palladio experiments in parallel by separately deploying each experiment on a Kubernetes cluster. The  [ExperimentAutomation][ExperimentAutomation]  is already provided as docker container. The aim of this project is to write an intelligent RestClient that is able to receive the experiment files, set up and start a Kubernetes pods containing the mentioned docker container and finally collect the simulation data. The client itself should also run in a Kubernetes pods to be fully scalable. 
 
 Therefore, the following steps were necessary:
 
@@ -42,7 +42,7 @@ Hints:
 
 
 
-## Basic Concepts
+## Concepts & Design Decisions
 
 Basic Concepts of the Kubernetes client. 
 
@@ -113,7 +113,7 @@ Summarised:
 * SimulationCRDs are the "entrypoint" to the respective simulation 
 * Access simulation by their unique name (simulation-"uuid")
 
-### Data Exchange: Network File System
+### Data Exchange: Network File System (NFS)
 
 A Container's file system lives only as long as the Container does. So when a Container terminates and restarts, file system changes are lost. For more consistent storage that is independent of the Container and not limited to the life cycle of a Pod, Volumes need to be used.
 
@@ -186,6 +186,14 @@ The Fabric-8-Client Framework provides a useful functionality called "Watcher". 
     * The simulation is deserialized and validated 
   * Only valid Simulations with status `Succeeded`are resurrected and restored on the cluster
 
+### Lifecycle of Pods and Simulations
+
+Pods and CRDs always live as long as they are deployed on the cluster. In case of a server crash for instance, the data of a pod or of a simulation CRD is lost, if not persisted. Consequently, simulation results also would only be available as long as the simulation crd "lives" on the cluster. Hence, it was necessary to define a concept to extend the lifecycle of a simulation CRD through persisting its metadata as describe earlier.
+
+Therefore, simulation crds can be resurrected in case of a cluster crash and the results of the finished experiments are available for "eternity". 
+
+Pods in contrast get deleted as soon as they finish the simulation. Their resources can be released, as any simulation-related data like logs and results is managed by the respective simulation CRD.
+
 
 
 ## REST Interface
@@ -229,31 +237,42 @@ Rest-Interface for other queries. Host-Path must be prepended.
 * Is client active: `/simulationautomation/client`
   * Return Status 200 (OK) if client is up and running
 
-### Redirection
+### Rest-Interface Behaviour
 
-* Redirection follows this [Pattern][http://restalk-patterns.org/long-running-operation-polling.html] 
+* Rest-Client is designed according to this [Pattern][http://restalk-patterns.org/long-running-operation-polling.html] 
 
    ![](../KubernetesSimulationAutomation/images/RestPatter.png)
 
-## Palladio Eclipse Plugin
-
-### Simulation Status
+### 
 
 
 
-## Decisions during the Design Process
+#### 
 
-The following paragraph provides the most critical design decision that were made during the design process.
+## Palladio Eclipse Plug-In
 
-#### CustomResourceDefinition: Simulation
+The [Simulation Plugin][https://github.com/Benkler/Palladio-Addons-ExperimentAutomation] is a forked project of the  [Palladio-Addons-ExperimentAutomation]][https://github.com/PalladioSimulator/Palladio-Addons-ExperimentAutomation] project. It's aim is not to provide a complete and mature Eclipse Plug-In, but rather a proof of concept. It is used to show that the EMF-related part of the overall project can be combined with Kubernetes. In short, the following functionality is available:
 
-#### Data Persistence: Network File System
+* Get an overview of all running or finished simulation on an arbitrary Kubernetes Cluster
+* Download Log files that were captured during the experiment execution
+* Download the results as zipped Folder
+* Send a new simulation to the cluster (includes resolving of all resources as specified in the .experiment-File)
 
-#### Rest-Api
+The following snapshot demonstrates the GUI:
 
-#### Lifecycle of Pods and Simulations
+![](images/plugin_gui.png)
 
+### 
 
+## Known Issues
+
+* The creation time depends on the time settings of the Kubernetes cluster
+* Refreshing the experiment might take 2 seconds
+
+### Outlook
+
+* Test coverage is a zero in both projects
+* Integrate simulation start into the eclipse workflow at the right position (remove proof of concept GUI)
 
 
 

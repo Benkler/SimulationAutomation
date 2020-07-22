@@ -39,7 +39,6 @@ public class SimulationAutomationStatusController {
     List<SimulationVO> existingSimulations =
         simulationAutomationServiceProxy.getExistingSimulations();
 
-
     String responseBody = JSONUtil.getInstance().toJson(existingSimulations);
 
     log.info("Following simulations exist: " + existingSimulations.toString());
